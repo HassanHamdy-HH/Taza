@@ -390,6 +390,7 @@
   .card-body{padding:12px; display:flex; flex-direction:column; gap:6px; flex:1;}
   .card-name{font-weight:700; font-size:14.5px;}
   .card-unit{font-size:11px; color:var(--ink-soft);}
+  .card-min-hint{font-size:10px; color:var(--apricot-dark); margin-top:2px; line-height:1.4;}
   .card-price{
     font-family:'Cairo'; font-weight:800; color:var(--apricot-dark); font-size:16px;
     margin-top:2px;
@@ -908,7 +909,7 @@
   </span>
 </a>
 
-<a href="https://www.facebook.com/share/19U8GDWRvQ/" target="_blank" rel="noopener" class="facebook-float" title="صفحتنا على فيسبوك">
+<a href="https://www.facebook.com/share/1DamUjHDam/" target="_blank" rel="noopener" class="facebook-float" title="صفحتنا على فيسبوك">
   <span class="facebook-pulse"></span>
   <span class="fb-inner">
     <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
@@ -955,6 +956,7 @@ const TRANSLATIONS = {
     checkoutBtnText: 'إتمام الطلب',
     popularBadge: 'الأكثر طلباً',
     pricePerUnit: 'السعر لكل',
+    minOrderHint: 'الحد الأدنى للطلب: 1 كيلو (تقدر تزود بنص أو ربع كيلو)',
     addToCart: 'أضف للسلة',
     emptyCart: 'السلة فاضية دلوقتي 🧺<br>ابدأ اختار من المنتجات فوق',
     remove: 'إزالة',
@@ -988,6 +990,7 @@ const TRANSLATIONS = {
     fawryInstructions: 'روح لأقرب منفذ فوري وادفع بكود الفوري ده خلال 48 ساعة',
     vodafoneInstructions: 'حوّل المبلغ على رقم فودافون كاش',
     instapayInstructions: 'حوّل المبلغ عن طريق InstaPay على',
+    instapayPayNow: '💳 ادفع الآن عن طريق InstaPay',
     writeCodeInTransfer: 'اكتب كود الطلب ده في رسالة التحويل عشان نتأكد من طلبك بسرعة:',
     cashInstructions: 'هيتم تحصيل المبلغ نقدي عند استلام الطلب',
     orderConfirmed: 'تم تأكيد طلبك',
@@ -1047,6 +1050,7 @@ const TRANSLATIONS = {
     checkoutBtnText: 'Checkout',
     popularBadge: 'Most Popular',
     pricePerUnit: 'Price per',
+    minOrderHint: 'Minimum order: 1 kg (you can add in half or quarter kg steps)',
     addToCart: 'Add to Cart',
     emptyCart: 'Your cart is empty 🧺<br>Start choosing from the products above',
     remove: 'Remove',
@@ -1080,6 +1084,7 @@ const TRANSLATIONS = {
     fawryInstructions: 'Go to your nearest Fawry outlet and pay with this Fawry code within 48 hours',
     vodafoneInstructions: 'Transfer the amount to this Vodafone Cash number',
     instapayInstructions: 'Transfer the amount via InstaPay to',
+    instapayPayNow: '💳 Pay Now via InstaPay',
     writeCodeInTransfer: 'Write this order code in the transfer note so we can confirm your order quickly:',
     cashInstructions: 'The amount will be collected in cash upon delivery',
     orderConfirmed: 'Your Order is Confirmed',
@@ -1203,8 +1208,9 @@ const STATUS_CANCELLED_EN = 'Cancelled';
 /* ============================================================
    عدّل الرقمين دول برقمك الحقيقي لما يكون جاهز عندك:
    ============================================================ */
-const VODAFONE_CASH_NUMBER = '01042738603';
-const INSTAPAY_HANDLE = 'yourname@instapay';
+const VODAFONE_CASH_NUMBER = '01023441502';
+const INSTAPAY_HANDLE = 'hassan1hamdy18@instapay';
+const INSTAPAY_LINK = 'https://ipn.eg/S/hassan1hamdy18/instapay/8HqrJh';
 
 /* رسوم التوصيل: 10 ج.م لو الطلب أقل من 200 ج.م، ومجاني لو 200 ج.م أو أكتر */
 const DELIVERY_FEE = 10;
@@ -1241,6 +1247,13 @@ function paymentLabel(method){
 
 function pName(p){ return getLang()==='en' ? p.nameEn : p.name; }
 function pUnit(p){ return getLang()==='en' ? p.unitEn : p.unit; }
+function isWeighted(p){ return p.unit === 'كيلو'; }
+function qtyStep(p){ return isWeighted(p) ? 0.25 : 1; }
+function qtyFloor(p){ return isWeighted(p) ? 1 : 1; }
+function formatQty(q){
+  const r = Math.round(q*100)/100;
+  return Number.isInteger(r) ? String(r) : String(r).replace(/0+$/,'').replace(/\.$/,'');
+}
 function statusLabel(status){
   if(status === STATUS_CANCELLED) return getLang()==='en' ? STATUS_CANCELLED_EN : STATUS_CANCELLED;
   const idx = STATUS_STAGES.indexOf(status);
@@ -1280,10 +1293,11 @@ function cardHTML(p){
       <div class="card-name">${pName(p)}</div>
       <div class="card-unit">${t('pricePerUnit')} ${pUnit(p)}</div>
       <div class="card-price">${p.retail} ${cur} <span>/ ${pUnit(p)}</span></div>
+      ${isWeighted(p) ? `<div class="card-min-hint">${t('minOrderHint')}</div>` : ''}
       <div class="qty-row">
         <div class="stepper">
           <button class="dec">−</button>
-          <span class="qtyVal">${qty}</span>
+          <span class="qtyVal" data-temp="0">${formatQty(qty)}</span>
           <button class="inc">+</button>
         </div>
         <button class="add-btn">${t('addToCart')}</button>
@@ -1302,25 +1316,31 @@ document.addEventListener('click', (e)=>{
   const card = e.target.closest('.card');
   if(!card) return;
   const id = card.dataset.id;
+  const product = PRODUCTS.find(p=>p.id===id);
+  if(!product) return;
+  const step = qtyStep(product);
+  const floor = qtyFloor(product);
   const qtySpan = card.querySelector('.qtyVal');
-  let currentTemp = parseInt(qtySpan.dataset.temp || qtySpan.textContent) || 0;
+  let currentTemp = parseFloat(qtySpan.dataset.temp || qtySpan.textContent) || 0;
 
   if(e.target.classList.contains('inc')){
-    currentTemp = currentTemp + 1;
-    qtySpan.textContent = currentTemp;
+    currentTemp = currentTemp === 0 ? floor : Math.round((currentTemp + step)*100)/100;
+    qtySpan.textContent = formatQty(currentTemp);
     qtySpan.dataset.temp = currentTemp;
   }
   if(e.target.classList.contains('dec')){
-    currentTemp = Math.max(0, currentTemp - 1);
-    qtySpan.textContent = currentTemp;
+    let next = Math.round((currentTemp - step)*100)/100;
+    if(next < floor) next = 0;
+    currentTemp = next;
+    qtySpan.textContent = formatQty(currentTemp);
     qtySpan.dataset.temp = currentTemp;
   }
   if(e.target.classList.contains('add-btn')){
-    const val = parseInt(qtySpan.dataset.temp || qtySpan.textContent) || 0;
+    const val = parseFloat(qtySpan.dataset.temp || qtySpan.textContent) || 0;
     if(val <= 0) return;
-    cart[id] = (cart[id]||0) + val;
+    cart[id] = Math.round(((cart[id]||0) + val)*100)/100;
     saveCart();
-    qtySpan.textContent = 0;
+    qtySpan.textContent = '0';
     qtySpan.dataset.temp = 0;
     renderCart();
     pulseCartBtn();
@@ -1349,7 +1369,7 @@ function saveCart(){ localStorage.setItem('msweis_cart', JSON.stringify(cart)); 
 function cartEntries(){
   return Object.entries(cart).filter(([id,qty])=>qty>0).map(([id,qty])=>{
     const p = PRODUCTS.find(x=>x.id===id);
-    return {p, qty, price:p.retail, lineTotal: p.retail*qty};
+    return {p, qty, price:p.retail, lineTotal: Math.round(p.retail*qty*100)/100};
   });
 }
 
@@ -1367,7 +1387,7 @@ function renderCart(){
         <div class="cart-item-emoji">${e.p.emoji}</div>
         <div class="cart-item-info">
           <div class="cart-item-name">${pName(e.p)}</div>
-          <div class="cart-item-meta">${e.qty} ${pUnit(e.p)} × ${e.price} ${cur}</div>
+          <div class="cart-item-meta">${formatQty(e.qty)} ${pUnit(e.p)} × ${e.price} ${cur}</div>
           <div class="cart-item-row">
             <span class="remove-link" data-remove="${e.p.id}">${t('remove')}</span>
             <span class="cart-item-price">${e.lineTotal} ${cur}</span>
@@ -1612,6 +1632,7 @@ async function submitOrder(){
     paymentMethod==='instapay' ? `
       <p style="margin-top:10px;">${t('instapayInstructions')} (${total} ${cur}):</p>
       <div class="track-code" style="border-color:var(--apricot); color:var(--apricot-dark);">${INSTAPAY_HANDLE}</div>
+      <a href="${INSTAPAY_LINK}" target="_blank" rel="noopener" class="submit-btn" style="display:block; text-align:center; text-decoration:none; margin-top:10px;">${t('instapayPayNow')}</a>
       <p style="margin-top:6px; font-size:12.5px;">${t('writeCodeInTransfer')} <strong>${code}</strong></p>
     ` :
     `<p style="margin-top:10px;">${t('cashInstructions')}</p>`;
@@ -1692,7 +1713,7 @@ trackBtn.addEventListener('click', async ()=>{
   }
   const cur = t('currency');
   const itemsHTML = order.items.map(it=>
-    `<div class="track-item-row"><span>${it.name} × ${it.qty} ${it.unit}</span><span>${it.lineTotal} ${cur}</span></div>`
+    `<div class="track-item-row"><span>${it.name} × ${formatQty(it.qty)} ${it.unit}</span><span>${it.lineTotal} ${cur}</span></div>`
   ).join('');
 
   trackResult.innerHTML = `
@@ -1962,7 +1983,7 @@ function renderAdminOrders(){
       return;
     }
     list.innerHTML = filtered.map(o=>{
-      const itemsSummary = (o.items||[]).map(it=>`${it.name} ×${it.qty}`).join('، ');
+      const itemsSummary = (o.items||[]).map(it=>`${it.name} ×${formatQty(it.qty)}`).join('، ');
       const isCancelled = o.status === STATUS_CANCELLED;
       const isDelivered = o.status === STATUS_STAGES[STATUS_STAGES.length-1];
       return `

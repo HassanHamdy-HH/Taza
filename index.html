@@ -376,19 +376,20 @@
     35%{left:130%;}
     100%{left:130%;}
   }
-  .card-img span{
+  .card-img span, .card-img svg{
     position:relative; z-index:1;
     filter:drop-shadow(0 6px 6px rgba(0,0,0,.18));
     animation:cardIconFloat 3s ease-in-out infinite;
     animation-delay:inherit;
   }
+  .card-img svg{width:78px; height:78px; display:block;}
   @keyframes cardIconFloat{
     0%,100%{transform:translateY(0) rotate(0deg);}
     50%{transform:translateY(-6px) rotate(-4deg);}
   }
-  .card:nth-child(3n+1) .card-img, .card:nth-child(3n+1) .card-img span{animation-delay:0s;}
-  .card:nth-child(3n+2) .card-img, .card:nth-child(3n+2) .card-img span{animation-delay:.5s;}
-  .card:nth-child(3n+3) .card-img, .card:nth-child(3n+3) .card-img span{animation-delay:1s;}
+  .card:nth-child(3n+1) .card-img, .card:nth-child(3n+1) .card-img span, .card:nth-child(3n+1) .card-img svg{animation-delay:0s;}
+  .card:nth-child(3n+2) .card-img, .card:nth-child(3n+2) .card-img span, .card:nth-child(3n+2) .card-img svg{animation-delay:.5s;}
+  .card:nth-child(3n+3) .card-img, .card:nth-child(3n+3) .card-img span, .card:nth-child(3n+3) .card-img svg{animation-delay:1s;}
   .card-body{padding:12px; display:flex; flex-direction:column; gap:6px; flex:1;}
   .card-name{font-weight:700; font-size:14.5px;}
   .card-unit{font-size:11px; color:var(--ink-soft);}
@@ -799,6 +800,9 @@
   <div class="board" id="boardVeg" data-label="أسعار الخضار">
     <div class="board-note" data-i18n="boardNoteVeg">أسعار الخضار بتتحدث يومياً حسب سعر السوق</div>
   </div>
+  <div class="board" id="boardHerbs" data-label="أسعار الخضرة" style="margin-top:14px;">
+    <div class="board-note" data-i18n="boardNoteHerbs">أسعار الخضرة بتتحدث يومياً حسب سعر السوق</div>
+  </div>
   <div class="board" id="boardFruit" data-label="أسعار الفاكهة" style="margin-top:14px;">
     <div class="board-note" data-i18n="boardNoteFruit">أسعار الفاكهة بتتحدث يومياً حسب سعر السوق</div>
   </div>
@@ -810,6 +814,12 @@
     <div class="line"></div>
   </div>
   <div class="grid" id="vegGrid"></div>
+
+  <div class="catalog-head" style="margin-top:34px;">
+    <h2 data-i18n="catHerbs">الخضرة</h2>
+    <div class="line"></div>
+  </div>
+  <div class="grid" id="herbGrid"></div>
 
   <div class="catalog-head" style="margin-top:34px;">
     <h2 data-i18n="catFruit">فاكهة</h2>
@@ -885,6 +895,7 @@
   <div class="drawer-foot">
     <div class="total-row"><span data-i18n="itemCount">عدد الأصناف</span><span id="sumItems">0</span></div>
     <div class="total-row final"><span data-i18n="total">الإجمالي</span><span id="sumTotal">0 ج.م</span></div>
+    <div id="minOrderValueHint" style="display:none; font-size:12px; color:#B5462F; font-weight:700; text-align:center; margin-bottom:8px;"></div>
     <button class="checkout-btn" id="checkoutBtn" disabled data-i18n="checkoutBtnText">إتمام الطلب</button>
   </div>
 </div>
@@ -935,12 +946,14 @@ const TRANSLATIONS = {
     heroTitle: 'خضار وفاكهة <span>طازة</span> من السوق<br>لباب البيت أينما كنت',
     heroSubtitle: 'خضار وفاكهة يومية بأسعار واضحة، توصيل لباب البيت',
     scrollHintText: 'عايز تطلب؟ انزل تحت واضغط على المنتج',
-    trust1: 'توصيل بـ10 ج.م لكل الطلبات — ومجاني فوق 200 ج.م',
+    trust1: 'توصيل بـ15 ج.م لكل الطلبات — ومجاني فوق 200 ج.م',
     trust2: 'بضاعة طازة يومياً من السوق',
     trust3: 'دفع آمن أو عند الاستلام',
     boardNoteVeg: 'أسعار الخضار بتتحدث يومياً حسب سعر السوق',
+    boardNoteHerbs: 'أسعار الخضرة بتتحدث يومياً حسب سعر السوق',
     boardNoteFruit: 'أسعار الفاكهة بتتحدث يومياً حسب سعر السوق',
     catVeg: 'خضروات',
+    catHerbs: 'الخضرة',
     catFruit: 'فاكهة',
     aboutText: 'بنوصّل خضار وفاكهة طازة يومياً من السوق لبيتك، بأسعار واضحة من غير وسطاء زيادة. بنراجع البضاعة بعنينا قبل ما تتوصل، وهدفنا إنك تثق في اللي بيوصلك من أول طلب.',
     stat1Title: 'يومياً', stat1Sub: 'بضاعة طازة',
@@ -961,6 +974,7 @@ const TRANSLATIONS = {
     popularBadge: 'الأكثر طلباً',
     pricePerUnit: 'السعر لكل',
     minOrderHint: 'الحد الأدنى للطلب: 1 كيلو (تقدر تزود بنص أو ربع كيلو)',
+    minOrderValueHint: 'محتاج تضيف {amount} {currency} كمان عشان توصل للحد الأدنى للطلب (50 ج.م)',
     addToCart: 'أضف للسلة',
     emptyCart: 'السلة فاضية دلوقتي 🧺<br>ابدأ اختار من المنتجات فوق',
     remove: 'إزالة',
@@ -999,6 +1013,7 @@ const TRANSLATIONS = {
     vodafoneAutoDialHint: 'هيفتحلك شاشة الاتصال بالرقم والمبلغ جاهزين، دوس اتصال وكمّل بالرقم السري بتاعك',
     writeCodeInTransfer: 'اكتب كود الطلب ده في رسالة التحويل عشان نتأكد من طلبك بسرعة:',
     sendProofOnWhatsapp: '📸 متنساش تبعتلنا صورة إثبات الدفع على واتساب',
+    orderPendingReview: '⏳ سيتم تأكيد طلبك بعد مراجعة رسالة الدفع',
     cashInstructions: 'هيتم تحصيل المبلغ نقدي عند استلام الطلب',
     orderConfirmed: 'تم تأكيد طلبك',
     keepTrackCode: 'احتفظ بكود الطلب ده عشان تقدر تتابع حالته من قسم "تتبع طلبك"',
@@ -1032,12 +1047,14 @@ const TRANSLATIONS = {
     heroTitle: 'Fresh <span>Vegetables & Fruit</span> from the Market<br>To Your Door, Wherever You Are',
     heroSubtitle: 'Daily fresh produce at clear prices, delivered to your doorstep',
     scrollHintText: 'Want to order? Scroll down and tap a product',
-    trust1: 'Delivery for 10 EGP — free above 200 EGP',
+    trust1: 'Delivery for 15 EGP — free above 200 EGP',
     trust2: 'Fresh produce from the market every day',
     trust3: 'Secure payment or cash on delivery',
     boardNoteVeg: 'Vegetable prices update daily based on market rates',
+    boardNoteHerbs: 'Herb prices update daily based on market rates',
     boardNoteFruit: 'Fruit prices update daily based on market rates',
     catVeg: 'Vegetables',
+    catHerbs: 'Herbs & Greens',
     catFruit: 'Fruit',
     aboutText: 'We deliver fresh vegetables and fruit daily from the market to your door, at clear prices with no extra middlemen. We personally check the produce before it\'s delivered, and our goal is to earn your trust from the very first order.',
     stat1Title: 'Daily', stat1Sub: 'Fresh produce',
@@ -1058,6 +1075,7 @@ const TRANSLATIONS = {
     popularBadge: 'Most Popular',
     pricePerUnit: 'Price per',
     minOrderHint: 'Minimum order: 1 kg (you can add in half or quarter kg steps)',
+    minOrderValueHint: 'Add {amount} {currency} more to reach the minimum order value (50 EGP)',
     addToCart: 'Add to Cart',
     emptyCart: 'Your cart is empty 🧺<br>Start choosing from the products above',
     remove: 'Remove',
@@ -1096,6 +1114,7 @@ const TRANSLATIONS = {
     vodafoneAutoDialHint: 'This opens your dialer with the number and amount pre-filled — tap call and enter your PIN to finish',
     writeCodeInTransfer: 'Write this order code in the transfer note so we can confirm your order quickly:',
     sendProofOnWhatsapp: "📸 Don't forget to send us a payment screenshot on WhatsApp",
+    orderPendingReview: '⏳ Your order will be confirmed after we review your payment message',
     cashInstructions: 'The amount will be collected in cash upon delivery',
     orderConfirmed: 'Your Order is Confirmed',
     keepTrackCode: 'Keep this order code so you can track its status from the "Track Order" section',
@@ -1168,45 +1187,59 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 /* ===================== DATA ===================== */
 const PRODUCTS = [
-  {id:'v1', name:'بطاطس', nameEn:'Potato', unit:'كيلو', unitEn:'kg', emoji:'🥔', cat:'veg', retail:27, margin:2.0, popular:true},
-  {id:'v2', name:'بصل أبيض', nameEn:'White Onion', unit:'كيلو', unitEn:'kg', emoji:'🧅', cat:'veg', retail:27, margin:2.0},
-  {id:'v3', name:'بصل أحمر', nameEn:'Red Onion', unit:'كيلو', unitEn:'kg', emoji:'🧅', cat:'veg', retail:27, margin:2.0},
-  {id:'v4', name:'طماطم', nameEn:'Tomato', unit:'كيلو', unitEn:'kg', emoji:'🍅', cat:'veg', retail:27, margin:2.0, popular:true},
-  {id:'v5', name:'جزر', nameEn:'Carrot', unit:'كيلو', unitEn:'kg', emoji:'🥕', cat:'veg', retail:27, margin:2.0},
-  {id:'v6', name:'باذنجان رومي', nameEn:'Long Eggplant', unit:'كيلو', unitEn:'kg', emoji:'🍆', cat:'veg', retail:16, margin:1},
-  {id:'v7', name:'خيار', nameEn:'Cucumber', unit:'كيلو', unitEn:'kg', emoji:'🥒', cat:'veg', retail:27, margin:2.0},
-  {id:'v8', name:'فلفل شطة', nameEn:'Hot Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', cat:'veg', retail:21.5, margin:1.5},
-  {id:'v9', name:'فلفل رومي', nameEn:'Bell Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', cat:'veg', retail:21.5, margin:1.5},
-  {id:'v10', name:'كوسة', nameEn:'Zucchini', unit:'كيلو', unitEn:'kg', emoji:'🥒', cat:'veg', retail:38, margin:3.0},
-  {id:'v11', name:'باذنجان أسود (عروس)', nameEn:'Black Eggplant (Small)', unit:'كيلو', unitEn:'kg', emoji:'🍆', cat:'veg', retail:16, margin:1},
-  {id:'v12', name:'باذنجان أبيض (عروس)', nameEn:'White Eggplant (Small)', unit:'كيلو', unitEn:'kg', emoji:'🍆', cat:'veg', retail:21.5, margin:1.5},
-  {id:'v13', name:'باميا', nameEn:'Okra', unit:'كيلو', unitEn:'kg', emoji:'🌿', cat:'veg', retail:59.5, margin:4.5},
-  {id:'v14', name:'قتة', nameEn:'Qatta (Leafy Green)', unit:'كيلو', unitEn:'kg', emoji:'🥬', cat:'veg', retail:21.5, margin:1.5},
-  {id:'v15', name:'فلفل أحمر', nameEn:'Red Bell Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', cat:'veg', retail:32.5, margin:2.5},
-  {id:'v16', name:'زيتون تفاح', nameEn:'Apple Olive', unit:'كيلو', unitEn:'kg', emoji:'🌰', cat:'veg', retail:54, margin:4.0},
-  {id:'v17', name:'ليمون', nameEn:'Lemon', unit:'كيلو', unitEn:'kg', emoji:'🍋', cat:'veg', retail:43, margin:3.0},
-  {id:'v18', name:'فلفل ألوان', nameEn:'Colored Bell Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', cat:'veg', retail:48.5, margin:3.5},
-  {id:'v19', name:'بقدونس', nameEn:'Parsley', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:4.5, margin:1},
-  {id:'v20', name:'كسبرة', nameEn:'Coriander', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:4.5, margin:1},
-  {id:'v21', name:'شبت', nameEn:'Dill', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:4.5, margin:1},
-  {id:'v22', name:'ملوخية', nameEn:'Molokhia', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:11, margin:1},
-  {id:'v23', name:'نعناع', nameEn:'Mint', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:6, margin:1},
-  {id:'v24', name:'خس كابوتشا', nameEn:'Iceberg Lettuce', unit:'رأس', unitEn:'head', emoji:'🥬', cat:'veg', retail:16, margin:1},
-  {id:'v25', name:'ورق عنب', nameEn:'Grape Leaves', unit:'برطمان', unitEn:'jar', emoji:'🍇', cat:'veg', retail:54, margin:4.0},
-  {id:'v26', name:'جرجير', nameEn:'Arugula', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:3.5, margin:1},
-  {id:'f1', name:'موز', nameEn:'Banana', unit:'كيلو', unitEn:'kg', emoji:'🍌', cat:'fruit', retail:43, margin:3.0, popular:true},
-  {id:'f2', name:'تفاح بلدي', nameEn:'Local Apple', unit:'كيلو', unitEn:'kg', emoji:'🍎', cat:'fruit', retail:48.5, margin:3.5},
-  {id:'f3', name:'كمثرى', nameEn:'Pear', unit:'كيلو', unitEn:'kg', emoji:'🍐', cat:'fruit', retail:43, margin:3.0},
-  {id:'f4', name:'عنب فرنسون (أحمر)', nameEn:'Red Flame Grapes', unit:'كيلو', unitEn:'kg', emoji:'🍇', cat:'fruit', retail:70, margin:5.0},
+  {id:'v27', name:'بطاطس كارا', nameEn:'Kara Potato', unit:'كيلو', unitEn:'kg', emoji:'🥔', cat:'veg', retail:25, margin:2.0, popular:true},
+  {id:'v28', name:'بطاطس تايسون', nameEn:'Tyson Potato', unit:'كيلو', unitEn:'kg', emoji:'🥔', cat:'veg', retail:27, margin:2.0},
+  {id:'v2', name:'بصل أبيض', nameEn:'White Onion', unit:'كيلو', unitEn:'kg', emoji:'🧅', cat:'veg', retail:19.5, margin:1.5},
+  {id:'v3', name:'بصل أحمر', nameEn:'Red Onion', unit:'كيلو', unitEn:'kg', emoji:'🧅', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><ellipse cx="0" cy="8" rx="16" ry="20" fill="#A8324A"/><ellipse cx="0" cy="8" rx="16" ry="20" fill="none" stroke="#7A2138" stroke-width="1"/><path d="M-10 -2 Q0 4 10 -2" fill="none" stroke="#7A2138" stroke-width="1" opacity="0.6"/><path d="M-11 6 Q0 12 11 6" fill="none" stroke="#7A2138" stroke-width="1" opacity="0.6"/><path d="M-9 14 Q0 19 9 14" fill="none" stroke="#7A2138" stroke-width="1" opacity="0.6"/><path d="M0 -12 L-3 -20 M0 -12 L3 -20 M0 -12 L0 -21" stroke="#8A6A3A" stroke-width="1.4" stroke-linecap="round"/><ellipse cx="-5" cy="0" rx="3" ry="6" fill="#C24A63" opacity="0.7"/></g></svg>', cat:'veg', retail:19.5, margin:1.5},
+  {id:'v4', name:'طماطم', nameEn:'Tomato', unit:'كيلو', unitEn:'kg', emoji:'🍅', cat:'veg', retail:25, margin:2.0, popular:true},
+  {id:'v5', name:'جزر', nameEn:'Carrot', unit:'كيلو', unitEn:'kg', emoji:'🥕', cat:'veg', retail:25, margin:2.0},
+  {id:'v7', name:'خيار', nameEn:'Cucumber', unit:'كيلو', unitEn:'kg', emoji:'🥒', cat:'veg', retail:25, margin:2.0},
+  {id:'v10', name:'كوسة', nameEn:'Zucchini', unit:'كيلو', unitEn:'kg', emoji:'🥒', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,33)"><rect x="-7" y="-18" width="14" height="34" rx="7" fill="#9CCC65"/><rect x="-7" y="-18" width="14" height="34" rx="7" fill="none" stroke="#7CAE4E" stroke-width="1"/><path d="M-4 -10 L4 -10 M-4 -2 L4 -2 M-4 6 L4 6" stroke="#7CAE4E" stroke-width="1" opacity="0.6"/><g transform="translate(0,-19)"><ellipse cx="0" cy="-3" rx="2.6" ry="4" fill="#F2A93B"/><ellipse cx="4" cy="0" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(72 4 0)"/><ellipse cx="-4" cy="0" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(-72 -4 0)"/><ellipse cx="2.5" cy="4" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(144 2.5 4)"/><ellipse cx="-2.5" cy="4" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(-144 -2.5 4)"/><circle cx="0" cy="0" r="2" fill="#C97A1E"/></g></g></svg>', cat:'veg', retail:30, margin:2.0},
+  {id:'v6', name:'باذنجان رومي', nameEn:'Long Eggplant', unit:'كيلو', unitEn:'kg', emoji:'🍆', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><path d="M0 -10 C9 -10 14 -2 13 8 C12 16 6 21 0 21 C-6 21 -12 16 -13 8 C-14 -2 -9 -10 0 -10 Z" fill="#241522"/><path d="M0 -10 C9 -10 14 -2 13 8 C12 16 6 21 0 21 C-6 21 -12 16 -13 8 C-14 -2 -9 -10 0 -10 Z" fill="none" stroke="#140B18" stroke-width="1"/><ellipse cx="-4" cy="0" rx="3" ry="9" fill="#3A2438" opacity="0.75"/><g stroke="#5C8A3A" stroke-width="1.4" stroke-linecap="round" fill="none"><path d="M0 -10 L-6 -16"/><path d="M0 -10 L-2.5 -17"/><path d="M0 -10 L1 -17.5"/><path d="M0 -10 L4.5 -16.5"/><path d="M0 -10 L7 -14.5"/></g><ellipse cx="0" cy="-10" rx="6.5" ry="2.6" fill="#4C7A22"/></g></svg>', cat:'veg', retail:14, margin:1},
+  {id:'v11', name:'باذنجان أسود (عروس)', nameEn:'Black Eggplant (Small)', unit:'كيلو', unitEn:'kg', emoji:'🍆', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><path d="M0 -18 C6 -18 8 -8 7 4 C6 15 3 20 0 20 C-3 20 -6 15 -7 4 C-8 -8 -6 -18 0 -18 Z" fill="#241522"/><ellipse cx="-2.5" cy="-4" rx="1.8" ry="7" fill="#3A2438" opacity="0.7"/><path d="M-3 -17 Q0 -14 3 -17 M0 -18 L0 -22" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round" fill="none"/><ellipse cx="0" cy="-17" rx="4.5" ry="2" fill="#4C7A22"/></g></svg>', cat:'veg', retail:14, margin:1},
+  {id:'v12', name:'باذنجان أبيض (عروس)', nameEn:'White Eggplant (Small)', unit:'كيلو', unitEn:'kg', emoji:'🍆', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><path d="M0 -18 C6 -18 8 -8 7 4 C6 15 3 20 0 20 C-3 20 -6 15 -7 4 C-8 -8 -6 -18 0 -18 Z" fill="#F5F0E4"/><path d="M0 -18 C6 -18 8 -8 7 4 C6 15 3 20 0 20 C-3 20 -6 15 -7 4 C-8 -8 -6 -18 0 -18 Z" fill="none" stroke="#D8CFB8" stroke-width="1"/><ellipse cx="-2.5" cy="-4" rx="1.8" ry="7" fill="#fff" opacity="0.8"/><path d="M-3 -17 Q0 -14 3 -17 M0 -18 L0 -22" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round" fill="none"/><ellipse cx="0" cy="-17" rx="4.5" ry="2" fill="#4C7A22"/></g></svg>', cat:'veg', retail:14, margin:1},
+  {id:'v8', name:'فلفل شطة', nameEn:'Hot Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', cat:'veg', retail:19.5, margin:1.5},
+  {id:'v9', name:'فلفل رومي', nameEn:'Bell Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,33)"><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="#4CAF50"/><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="none" stroke="#3C8C40" stroke-width="1"/><path d="M-6 -12 Q-9 -3 -6 12" stroke="#3C8C40" stroke-width="1" fill="none" opacity="0.6"/><path d="M6 -12 Q9 -3 6 12" stroke="#3C8C40" stroke-width="1" fill="none" opacity="0.6"/><ellipse cx="-6" cy="-2" rx="3" ry="9" fill="#6FC172" opacity="0.7"/><path d="M0 -13 Q4 -18 10 -19 Q13 -19 12 -16" fill="none" stroke="#8A6A3A" stroke-width="1.6" stroke-linecap="round"/></g></svg>', cat:'veg', retail:19.5, margin:1.5},
+  {id:'v15', name:'فلفل أحمر', nameEn:'Red Bell Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,33)"><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="#D8392C"/><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="none" stroke="#A82B20" stroke-width="1"/><path d="M-6 -12 Q-9 -3 -6 12" stroke="#A82B20" stroke-width="1" fill="none" opacity="0.6"/><path d="M6 -12 Q9 -3 6 12" stroke="#A82B20" stroke-width="1" fill="none" opacity="0.6"/><ellipse cx="-6" cy="-2" rx="3" ry="9" fill="#F0685A" opacity="0.7"/><path d="M0 -13 Q4 -18 10 -19 Q13 -19 12 -16" fill="none" stroke="#8A6A3A" stroke-width="1.6" stroke-linecap="round"/></g></svg>', cat:'veg', retail:32.5, margin:2.5},
+  {id:'v18', name:'فلفل ألوان', nameEn:'Colored Bell Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(0.85)"><g transform="translate(-9,4)"><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="#4CAF50"/><path d="M0 -13 Q4 -18 10 -19" fill="none" stroke="#8A6A3A" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(10,-2)"><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="#E13A3A"/><path d="M0 -13 Q4 -18 10 -19" fill="none" stroke="#8A6A3A" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(-1,-14)"><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="#F2A93B"/><path d="M0 -13 Q4 -18 10 -19" fill="none" stroke="#8A6A3A" stroke-width="1.6" stroke-linecap="round"/></g></g></svg>', cat:'veg', retail:48.5, margin:3.5},
+  {id:'v13', name:'باميا', nameEn:'Okra', unit:'كيلو', unitEn:'kg', emoji:'🌿', svg:'<svg viewBox="0 0 64 64"><g transform="translate(29,32)"><path d="M-10 -16 C-6 -18 -1 -17 2 -14 C6 -9 6 6 3 15 C1 20 -3 21 -6 16 C-11 8 -12 -8 -10 -16 Z" fill="#5B9C3E"/><path d="M-6 -14 L-3 14 M-2 -15 L1 15" stroke="#3F6E2A" stroke-width="0.9" opacity="0.8"/><path d="M2 -12 C6 -13 10 -8 11 0 C12 7 9 13 4 15 C3 8 1 -3 2 -12 Z" fill="#6BAF4A"/><path d="M6 -10 L8 12" stroke="#4C8A32" stroke-width="0.9" opacity="0.7"/><path d="M12 -6 C15 -6 18 -2 17 4 C16 9 13 12 9 12 C9 6 9 -1 12 -6 Z" fill="#7BC258"/><path d="M-10 -16 L-12 -21 M2 -14 L1 -19 M12 -6 L14 -10" stroke="#3F5F2A" stroke-width="1.1" stroke-linecap="round"/></g></svg>', cat:'veg', retail:48.5, margin:3.5},
+  {id:'v14', name:'قتة', nameEn:'Qatta (Leafy Green)', unit:'كيلو', unitEn:'kg', emoji:'🥬', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><path d="M-16 10 C-14 -4 -6 -18 6 -19 C11 -19 13 -15 10 -12 C0 -11 -6 0 -8 12 C-9 18 -15 17 -16 10 Z" fill="#B5D96B"/><path d="M-16 10 C-14 -4 -6 -18 6 -19 C11 -19 13 -15 10 -12 C0 -11 -6 0 -8 12 C-9 18 -15 17 -16 10 Z" fill="none" stroke="#8FB84E" stroke-width="1"/><path d="M-13 5 C-9 -6 -2 -14 5 -16" stroke="#4C7A22" stroke-width="1.1" fill="none"/><path d="M-14 9 C-10 -2 -3 -11 4 -14" stroke="#4C7A22" stroke-width="1.1" fill="none"/><path d="M-13 13 C-9 3 -3 -6 3 -11" stroke="#4C7A22" stroke-width="1.1" fill="none"/><path d="M-10 15 C-7 6 -2 -2 3 -8" stroke="#4C7A22" stroke-width="1" fill="none" opacity="0.8"/></g></svg>', cat:'veg', retail:21.5, margin:1.5},
+  {id:'v16', name:'زيتون تفاحي', nameEn:'Fresh Green Olives', unit:'كيلو', unitEn:'kg', emoji:'🌰', svg:'<svg viewBox="0 0 64 64"><g transform="translate(33,33)"><circle cx="-8" cy="4" r="8" fill="#7CAE4E"/><circle cx="-8" cy="4" r="8" fill="none" stroke="#5C8A32" stroke-width="0.8"/><circle cx="5" cy="8" r="7.5" fill="#8FBE5E"/><circle cx="5" cy="8" r="7.5" fill="none" stroke="#6B9B42" stroke-width="0.8"/><circle cx="-2" cy="-6" r="7" fill="#6FA346"/><circle cx="-2" cy="-6" r="7" fill="none" stroke="#4F7C2E" stroke-width="0.8"/><circle cx="10" cy="-4" r="6.5" fill="#7CAE4E"/><circle cx="10" cy="-4" r="6.5" fill="none" stroke="#5C8A32" stroke-width="0.8"/><ellipse cx="-5" cy="1" rx="1.6" ry="3" fill="#B8D98F" opacity="0.7"/><path d="M2 -13 C6 -17 12 -17 14 -13 C10 -13 6 -12 2 -9 Z" fill="#5C8A32"/><path d="M2 -13 C6 -17 12 -17 14 -13 C10 -13 6 -12 2 -9 Z" fill="none" stroke="#3F5F22" stroke-width="0.6"/></g></svg>', cat:'veg', retail:54, margin:4.0},
+  {id:'v17', name:'ليمون', nameEn:'Lemon', unit:'كيلو', unitEn:'kg', emoji:'🍋', cat:'veg', retail:38, margin:3.0},
+  {id:'v30', name:'ثوم', nameEn:'Garlic', unit:'كيلو', unitEn:'kg', emoji:'🧄', cat:'veg', retail:38, margin:3.0},
+  {id:'v29', name:'بطاطا', nameEn:'Sweet Potato', unit:'كيلو', unitEn:'kg', emoji:'🍠', cat:'veg', retail:14, margin:1},
+  {id:'v25', name:'ورق عنب', nameEn:'Grape Leaves', unit:'برطمان', unitEn:'jar', emoji:'🍇', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34)"><rect x="-13" y="-6" width="26" height="26" rx="3" fill="#DCE9E4" opacity="0.55"/><rect x="-13" y="-6" width="26" height="26" rx="3" fill="none" stroke="#9FB8B0" stroke-width="1"/><rect x="-14" y="-13" width="28" height="8" rx="2" fill="#2E5C4A"/><rect x="-14" y="-13" width="28" height="8" rx="2" fill="none" stroke="#1F4536" stroke-width="0.8"/><g fill="#4C7A22" stroke="#3A5F1A" stroke-width="0.6"><ellipse cx="-8" cy="4" rx="3.4" ry="9" transform="rotate(-8 -8 4)"/><ellipse cx="-2.5" cy="5" rx="3.4" ry="9.5" transform="rotate(4 -2.5 5)"/><ellipse cx="3" cy="4" rx="3.4" ry="9" transform="rotate(-4 3 4)"/><ellipse cx="8.5" cy="5" rx="3.2" ry="8.5" transform="rotate(9 8.5 5)"/></g></g></svg>', cat:'veg', retail:48.5, margin:3.5},
+  {id:'v19', name:'بقدونس', nameEn:'Parsley', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:2.5, margin:1},
+  {id:'v20', name:'كسبرة', nameEn:'Coriander', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:2.5, margin:1},
+  {id:'v21', name:'شبت', nameEn:'Dill', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:2.5, margin:1},
+  {id:'v22', name:'ملوخية', nameEn:'Molokhia', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:9, margin:1},
+  {id:'v23', name:'نعناع', nameEn:'Mint', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:3, margin:1},
+  {id:'v24', name:'خس كابوتشا', nameEn:'Iceberg Lettuce', unit:'رأس', unitEn:'head', emoji:'🥬', cat:'veg', retail:11, margin:1},
+  {id:'v26', name:'جرجير', nameEn:'Arugula', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:2.5, margin:1},
+  {id:'v31', name:'كرفس', nameEn:'Celery', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:3, margin:1},
+  {id:'f1', name:'موز', nameEn:'Banana', unit:'كيلو', unitEn:'kg', emoji:'🍌', cat:'fruit', retail:38, margin:3.0, popular:true},
+  {id:'f2', name:'تفاح بلدي', nameEn:'Local Apple', unit:'كيلو', unitEn:'kg', emoji:'🍎', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.05)"><path d="M0 -12 C10 -14 17 -6 17 4 C17 15 10 22 0 22 C-10 22 -17 15 -17 4 C-17 -6 -10 -14 0 -12 Z" fill="#C9D66B"/><path d="M4 -10 C10 2 8 14 2 20 C8 16 14 8 13 -4 C11 -8 8 -10 4 -10 Z" fill="#D8433A" opacity="0.85"/><path d="M-10 -6 C-6 4 -8 14 -13 18 C-15 10 -15 -2 -10 -6 Z" fill="#D8433A" opacity="0.6"/><path d="M0 -12 L0 -19" stroke="#7A5A2E" stroke-width="1.6" stroke-linecap="round"/><path d="M0 -17 Q6 -20 9 -15 Q4 -14 0 -13 Z" fill="#5C8A32"/></g></svg>', cat:'fruit', retail:65, margin:5.0},
+  {id:'f21', name:'تفاح سكري', nameEn:'Sokkary Apple', unit:'كيلو', unitEn:'kg', emoji:'🍏', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.05)"><path d="M0 -12 C10 -14 17 -6 17 4 C17 15 10 22 0 22 C-10 22 -17 15 -17 4 C-17 -6 -10 -14 0 -12 Z" fill="#D62828"/><path d="M0 -12 C10 -14 17 -6 17 4 C17 15 10 22 0 22 C-10 22 -17 15 -17 4 C-17 -6 -10 -14 0 -12 Z" fill="none" stroke="#A81F1F" stroke-width="1"/><ellipse cx="-6" cy="-3" rx="3" ry="10" fill="#F06060" opacity="0.6"/><path d="M0 -12 L0 -19" stroke="#7A5A2E" stroke-width="1.6" stroke-linecap="round"/><path d="M0 -17 Q6 -20 9 -15 Q4 -14 0 -13 Z" fill="#5C8A32"/></g></svg>', cat:'fruit', retail:92, margin:7.0},
+  {id:'f22', name:'تفاح مستورد أحمر', nameEn:'Imported Red Apple', unit:'كيلو', unitEn:'kg', emoji:'🍎', cat:'fruit', retail:102.5, margin:7.5},
+  {id:'f23', name:'تفاح أصفر مستورد', nameEn:'Imported Yellow Apple', unit:'كيلو', unitEn:'kg', emoji:'🍏', cat:'fruit', retail:102.5, margin:7.5},
+  {id:'f3', name:'كمثرى', nameEn:'Pear', unit:'كيلو', unitEn:'kg', emoji:'🍐', cat:'fruit', retail:65, margin:5.0},
+  {id:'f4', name:'عنب فرنسون (أحمر)', nameEn:'Red Flame Grapes', unit:'كيلو', unitEn:'kg', emoji:'🍇', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(0.95)"><circle cx="0" cy="-8" r="6.5" fill="#8B2942"/><circle cx="-8" cy="-2" r="6.5" fill="#9C2F4A"/><circle cx="8" cy="-2" r="6.5" fill="#9C2F4A"/><circle cx="-4" cy="8" r="6.5" fill="#A8324F"/><circle cx="5" cy="9" r="6.5" fill="#A8324F"/><circle cx="0" cy="18" r="6" fill="#B23A55"/><ellipse cx="-2" cy="-10" rx="1.6" ry="2.6" fill="#C56B85" opacity="0.7"/><path d="M0 -14 Q3 -20 9 -19 Q9 -14 4 -13" fill="#5C8A32"/><path d="M0 -14 L0 -18" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:70, margin:5.0},
+  {id:'f8', name:'عنب بناتي (أخضر)', nameEn:'Green Seedless Grapes', unit:'كيلو', unitEn:'kg', emoji:'🍇', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(0.95)"><circle cx="0" cy="-8" r="6.5" fill="#A9CC63"/><circle cx="-8" cy="-2" r="6.5" fill="#B5D670"/><circle cx="8" cy="-2" r="6.5" fill="#B5D670"/><circle cx="-4" cy="8" r="6.5" fill="#BEDD7C"/><circle cx="5" cy="9" r="6.5" fill="#BEDD7C"/><circle cx="0" cy="18" r="6" fill="#C7E389"/><ellipse cx="-2" cy="-10" rx="1.6" ry="2.6" fill="#E4F0B8" opacity="0.8"/><path d="M0 -14 Q3 -20 9 -19 Q9 -14 4 -13" fill="#5C8A32"/><path d="M0 -14 L0 -18" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:43, margin:3.0},
   {id:'f5', name:'بلح أسود (رطب)', nameEn:'Black Dates (Fresh)', unit:'كيلو', unitEn:'kg', emoji:'🌴', cat:'fruit', retail:75.5, margin:5.5},
   {id:'f6', name:'بلح برحي (أصفر)', nameEn:'Barhi Dates (Yellow)', unit:'كيلو', unitEn:'kg', emoji:'🌴', cat:'fruit', retail:86.5, margin:6.5},
-  {id:'f7', name:'برقوق', nameEn:'Plum', unit:'كيلو', unitEn:'kg', emoji:'🍑', cat:'fruit', retail:65, margin:5.0},
-  {id:'f8', name:'عنب بناتي (أخضر)', nameEn:'Green Seedless Grapes', unit:'كيلو', unitEn:'kg', emoji:'🍇', cat:'fruit', retail:43, margin:3.0},
-  {id:'f9', name:'مانجا سكري', nameEn:'Sokkary Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', cat:'fruit', retail:75.5, margin:5.5, popular:true},
-  {id:'f10', name:'مانجا نعومي', nameEn:'Naomi Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', cat:'fruit', retail:75.5, margin:5.5},
-  {id:'f11', name:'مانجا عويسي', nameEn:'Ewaisi Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', cat:'fruit', retail:162, margin:12.0},
-  {id:'f12', name:'مانجا أصناف', nameEn:'Mixed Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', cat:'fruit', retail:54, margin:4.0},
-  {id:'f13', name:'جوافا', nameEn:'Guava', unit:'كيلو', unitEn:'kg', emoji:'🍈', cat:'fruit', retail:65, margin:5.0},
+  {id:'f7', name:'برقوق', nameEn:'Plum', unit:'كيلو', unitEn:'kg', emoji:'🍑', cat:'fruit', retail:70, margin:5.0},
+  {id:'f9', name:'مانجا سكري', nameEn:'Sokkary Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.5)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#E8A93B"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#C4831E" stroke-width="1"/><path d="M5 -12 C9 -8 11 -1 8 5" stroke="#D6402A" stroke-width="3.4" fill="none" opacity="0.5" stroke-linecap="round"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#F5CE7A" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:65, margin:5.0, popular:true},
+  {id:'f10', name:'مانجا نعومي', nameEn:'Naomi Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.95)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#E8A93B"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#C4831E" stroke-width="1"/><path d="M5 -12 C9 -8 11 -1 8 5" stroke="#D6402A" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#F5CE7A" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.1" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:65, margin:5.0},
+  {id:'f11', name:'مانجا عويسي', nameEn:'Ewaisi Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.1)"><path d="M-11 -6 C-8 -15 3 -18 11 -10 C18 -3 16 9 7 16 C0 22 -10 20 -14 10 C-16 4 -14 -1 -11 -6 Z" fill="#F5C518"/><path d="M-11 -6 C-8 -15 3 -18 11 -10 C18 -3 16 9 7 16 C0 22 -10 20 -14 10 C-16 4 -14 -1 -11 -6 Z" fill="none" stroke="#D4A00E" stroke-width="1"/><ellipse cx="-7" cy="-2" rx="2.6" ry="7" fill="#FBE28A" opacity="0.75"/><path d="M11 -10 Q15 -15 20 -14" fill="none" stroke="#5C8A32" stroke-width="1.1" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:135, margin:10.0},
+  {id:'f12', name:'مانجا أصناف', nameEn:'Mixed Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.5)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#E8A93B"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#C4831E" stroke-width="1"/><path d="M5 -12 C9 -8 11 -1 8 5" stroke="#D6402A" stroke-width="3.4" fill="none" opacity="0.5" stroke-linecap="round"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#F5CE7A" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:65, margin:5.0},
+  {id:'f19', name:'مانجا فراشة', nameEn:'Fasha Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.95)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#E8A93B"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#C4831E" stroke-width="1"/><path d="M5 -12 C9 -8 11 -1 8 5" stroke="#D6402A" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#F5CE7A" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.1" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:65, margin:5.0},
+  {id:'f20', name:'مانجا زبدة', nameEn:'Zibda Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.95)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#7CAE4E"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#5C8A32" stroke-width="1"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#B5D68F" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#4C7A22" stroke-width="1.1" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:65, margin:5.0},
+  {id:'f13', name:'جوافا', nameEn:'Guava', unit:'كيلو', unitEn:'kg', emoji:'🍈', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.05)"><path d="M0 -14 C11 -14 17 -4 16 6 C15 16 8 22 0 22 C-8 22 -15 16 -16 6 C-17 -4 -11 -14 0 -14 Z" fill="#DCE29A"/><path d="M0 -14 C11 -14 17 -4 16 6 C15 16 8 22 0 22 C-8 22 -15 16 -16 6 C-17 -4 -11 -14 0 -14 Z" fill="none" stroke="#B8C46E" stroke-width="1"/><ellipse cx="-5" cy="-2" rx="3" ry="10" fill="#EDF0C0" opacity="0.7"/><path d="M0 -14 Q-4 -22 -12 -22 Q-14 -16 -8 -13" fill="#5C8A32"/><path d="M0 -14 Q4 -20 10 -19" fill="none" stroke="#5C8A32" stroke-width="1.4" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:65, margin:5.0},
+  {id:'f14', name:'تين برشومي', nameEn:'Barshomi Fig', unit:'كيلو', unitEn:'kg', emoji:'🟢', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.05)"><path d="M0 -14 C9 -16 15 -8 14 3 C13 14 7 22 -1 22 C-9 22 -15 15 -14 4 C-13 -6 -7 -13 0 -14 Z" fill="#5B3A5C"/><path d="M0 -14 C9 -16 15 -8 14 3 C13 14 7 22 -1 22 C-9 22 -15 15 -14 4 C-13 -6 -7 -13 0 -14 Z" fill="none" stroke="#3F2740" stroke-width="1"/><ellipse cx="-5" cy="-3" rx="3" ry="9" fill="#7A5580" opacity="0.6"/><path d="M-2 -14 L-2 -19 M2 -15 L4 -19 M-6 -12 L-9 -16" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:43, margin:3.0},
+  {id:'f15', name:'أناناس', nameEn:'Pineapple', unit:'كيلو', unitEn:'kg', emoji:'🍍', cat:'fruit', retail:16, margin:1},
+  {id:'f16', name:'شمام', nameEn:'Cantaloupe', unit:'كيلو', unitEn:'kg', emoji:'🍈', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.05)"><circle cx="0" cy="4" r="18" fill="#D4A66E"/><circle cx="0" cy="4" r="18" fill="none" stroke="#B78A54" stroke-width="1"/><path d="M-15 -4 Q-8 0 -2 -6 Q4 -12 12 -8 M-16 4 Q-8 8 0 3 Q8 -2 16 2 M-14 12 Q-6 15 2 10 Q9 6 15 10" stroke="#B78A54" stroke-width="1" fill="none" opacity="0.7"/><path d="M0 -14 L0 -19" stroke="#5C8A32" stroke-width="1.6" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:16, margin:1},
+  {id:'f17', name:'رمان', nameEn:'Pomegranate', unit:'كيلو', unitEn:'kg', emoji:'🔴', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,35) scale(1.05)"><circle cx="0" cy="5" r="17" fill="#B8242E"/><circle cx="0" cy="5" r="17" fill="none" stroke="#8C1A22" stroke-width="1"/><ellipse cx="-6" cy="-2" rx="3" ry="9" fill="#D8535C" opacity="0.6"/><path d="M-6 -13 L-3 -19 L0 -13 L3 -19 L6 -13" fill="none" stroke="#8C1A22" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 -14 Q13 -17 15 -12" fill="none" stroke="#4C7A22" stroke-width="1.2" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:48.5, margin:3.5},
+  {id:'f18', name:'برتقال', nameEn:'Orange', unit:'كيلو', unitEn:'kg', emoji:'🍊', cat:'fruit', retail:38, margin:3.0},
 ];
 
 let cart = JSON.parse(localStorage.getItem('msweis_cart') || '{}'); // {id: qty}
@@ -1222,9 +1255,42 @@ const VODAFONE_CASH_NUMBER = '01023441502';
 const INSTAPAY_HANDLE = 'hassan1hamdy18@instapay';
 const INSTAPAY_LINK = 'https://ipn.eg/S/hassan1hamdy18/instapay/8HqrJh';
 
-/* رسوم التوصيل: 10 ج.م لو الطلب أقل من 200 ج.م، ومجاني لو 200 ج.م أو أكتر */
-const DELIVERY_FEE = 10;
+/* رسوم التوصيل: 15 ج.م لو الطلب أقل من 200 ج.م، ومجاني لو 200 ج.م أو أكتر */
+const DELIVERY_FEE = 15;
 const FREE_DELIVERY_THRESHOLD = 200;
+
+/* الحد الأدنى لإجمالي الطلب عشان العميل يقدر يكمل */
+const MIN_ORDER_VALUE = 50;
+
+/* إشعار تليجرام فوري للإدارة عند وصول طلب جديد */
+const TELEGRAM_BOT_TOKEN = '8756588965:AAFG59RizpAXXWFzeseU1PJM19V_7s4hzeQ';
+const TELEGRAM_CHAT_ID = '6532611682';
+
+function notifyTelegram(order){
+  try{
+    const itemsText = order.items.map(it=>`• ${it.name} × ${it.qty} ${it.unit}`).join('\n');
+    const methodText = order.deliveryMethod==='delivery' ? ('توصيل: '+order.address) : 'استلام من السوق';
+    const payText = paymentLabel(order.paymentMethod);
+    const text =
+`🛒 طلب جديد!
+كود الطلب: ${order.code}
+الاسم: ${order.name}
+الموبايل: ${order.phone}
+${methodText}
+طريقة الدفع: ${payText}
+
+الأصناف:
+${itemsText}
+
+الإجمالي: ${order.total} ج.م`;
+
+    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: text })
+    }).catch(()=>{});
+  }catch(e){}
+}
 
 function calcDeliveryFee(subtotal, method){
   if(method !== 'delivery') return 0;
@@ -1259,7 +1325,7 @@ function pName(p){ return getLang()==='en' ? p.nameEn : p.name; }
 function pUnit(p){ return getLang()==='en' ? p.unitEn : p.unit; }
 function isWeighted(p){ return p.unit === 'كيلو'; }
 function qtyStep(p){ return isWeighted(p) ? 0.25 : 1; }
-function qtyFloor(p){ return isWeighted(p) ? 1 : 1; }
+function qtyFloor(p){ return qtyStep(p); }
 function formatQty(q){
   const r = Math.round(q*100)/100;
   return Number.isInteger(r) ? String(r) : String(r).replace(/0+$/,'').replace(/\.$/,'');
@@ -1273,14 +1339,20 @@ function statusLabel(status){
 
 /* ===================== RENDER: PRICE BOARDS ===================== */
 const boardVeg = document.getElementById('boardVeg');
+const boardHerbs = document.getElementById('boardHerbs');
 const boardFruit = document.getElementById('boardFruit');
 
 function renderBoards(){
   const cur = t('currency');
-  const vegRows = PRODUCTS.filter(p=>p.cat==='veg').map(p=>
+  const vegRows = PRODUCTS.filter(p=>p.cat==='veg' && !isHerb(p)).map(p=>
     `<div class="board-row"><span class="name">${p.emoji} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
   ).join('');
   boardVeg.innerHTML = vegRows + `<div class="board-note">${t('boardNoteVeg')}</div>`;
+
+  const herbRows = PRODUCTS.filter(p=>p.cat==='veg' && isHerb(p)).map(p=>
+    `<div class="board-row"><span class="name">${p.emoji} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
+  ).join('');
+  boardHerbs.innerHTML = herbRows + `<div class="board-note">${t('boardNoteHerbs')}</div>`;
 
   const fruitRows = PRODUCTS.filter(p=>p.cat==='fruit').map(p=>
     `<div class="board-row"><span class="name">${p.emoji} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
@@ -1290,6 +1362,7 @@ function renderBoards(){
 
 /* ===================== RENDER: GRIDS ===================== */
 const vegGrid = document.getElementById('vegGrid');
+const herbGrid = document.getElementById('herbGrid');
 const fruitGrid = document.getElementById('fruitGrid');
 
 function cardHTML(p){
@@ -1298,12 +1371,11 @@ function cardHTML(p){
   return `
   <div class="card" data-id="${p.id}">
     ${p.popular ? `<div class="popular-badge">${t('popularBadge')}</div>` : ''}
-    <div class="card-img"><span>${p.emoji}</span></div>
+    <div class="card-img">${p.svg ? p.svg : `<span>${p.emoji}</span>`}</div>
     <div class="card-body">
       <div class="card-name">${pName(p)}</div>
       <div class="card-unit">${t('pricePerUnit')} ${pUnit(p)}</div>
       <div class="card-price">${p.retail} ${cur} <span>/ ${pUnit(p)}</span></div>
-      ${isWeighted(p) ? `<div class="card-min-hint">${t('minOrderHint')}</div>` : ''}
       <div class="qty-row">
         <div class="stepper">
           <button class="dec">−</button>
@@ -1316,8 +1388,11 @@ function cardHTML(p){
   </div>`;
 }
 
+function isHerb(p){ return p.unit === 'ربطة' || p.unit === 'رأس'; }
+
 function renderGrids(){
-  vegGrid.innerHTML = PRODUCTS.filter(p=>p.cat==='veg').map(cardHTML).join('');
+  vegGrid.innerHTML = PRODUCTS.filter(p=>p.cat==='veg' && !isHerb(p)).map(cardHTML).join('');
+  herbGrid.innerHTML = PRODUCTS.filter(p=>p.cat==='veg' && isHerb(p)).map(cardHTML).join('');
   fruitGrid.innerHTML = PRODUCTS.filter(p=>p.cat==='fruit').map(cardHTML).join('');
 }
 
@@ -1405,13 +1480,27 @@ function renderCart(){
         </div>
       </div>
     `).join('');
-    checkoutBtn.disabled = false;
   }
 
   const totalItems = entries.reduce((s,e)=>s+e.qty,0);
   const totalPrice = entries.reduce((s,e)=>s+e.lineTotal,0);
   sumItems.textContent = totalItems + ' ' + t('unitWord');
   sumTotal.textContent = totalPrice + ' ' + cur;
+
+  const minHintEl = document.getElementById('minOrderValueHint');
+  if(entries.length===0){
+    if(minHintEl){ minHintEl.style.display = 'none'; }
+  } else if(totalPrice < MIN_ORDER_VALUE){
+    checkoutBtn.disabled = true;
+    if(minHintEl){
+      minHintEl.style.display = 'block';
+      const remaining = Math.round((MIN_ORDER_VALUE - totalPrice)*100)/100;
+      minHintEl.textContent = t('minOrderValueHint').replace('{amount}', remaining).replace('{currency}', cur);
+    }
+  } else {
+    checkoutBtn.disabled = false;
+    if(minHintEl){ minHintEl.style.display = 'none'; }
+  }
 }
 
 drawerBody.addEventListener('click', (e)=>{
@@ -1587,6 +1676,10 @@ async function submitOrder(){
 
   const entries = cartEntries();
   const subtotal = entries.reduce((s,e)=>s+e.lineTotal,0);
+  if(subtotal < MIN_ORDER_VALUE){
+    alert(t('minOrderValueHint').replace('{amount}', Math.round((MIN_ORDER_VALUE-subtotal)*100)/100).replace('{currency}', t('currency')));
+    return;
+  }
   const deliveryFee = calcDeliveryFee(subtotal, deliveryMethod);
   const total = subtotal + deliveryFee;
   const code = genTrackCode();
@@ -1613,6 +1706,8 @@ async function submitOrder(){
     return;
   }
 
+  notifyTelegram(order);
+
   try{
     localStorage.setItem('msweis_last_order_code', code);
     showLastOrderHint();
@@ -1625,6 +1720,7 @@ async function submitOrder(){
 
   const cur = t('currency');
   const waProofLink = `https://wa.me/201042738603?text=${encodeURIComponent('مرحباً، ده إثبات دفع طلبي كود '+code)}`;
+  const pendingReviewNote = `<p style="margin-top:10px; background:#FFF6E5; border:1px solid var(--apricot); border-radius:8px; padding:8px 10px; font-size:12px; font-weight:700; color:var(--apricot-dark);">${t('orderPendingReview')}</p>`;
   const paymentBlock =
     paymentMethod==='vodafone' ? `
       <p style="margin-top:10px;">${t('vodafoneInstructions')} (${total} ${cur}):</p>
@@ -1633,6 +1729,7 @@ async function submitOrder(){
       <p style="margin-top:6px; font-size:11.5px; color:var(--ink-soft);">${t('vodafoneAutoDialHint')}</p>
       <p style="margin-top:6px; font-size:12.5px;">${t('writeCodeInTransfer')} <strong>${code}</strong></p>
       <a href="${waProofLink}" target="_blank" rel="noopener" style="display:block; text-align:center; margin-top:10px; background:#25D366; color:#fff; padding:10px; border-radius:8px; font-weight:700; font-size:13px; text-decoration:none;">${t('sendProofOnWhatsapp')}</a>
+      ${pendingReviewNote}
     ` :
     paymentMethod==='instapay' ? `
       <p style="margin-top:10px;">${t('instapayInstructions')} (${total} ${cur}):</p>
@@ -1640,6 +1737,7 @@ async function submitOrder(){
       <a href="${INSTAPAY_LINK}" target="_blank" rel="noopener" class="submit-btn" style="display:block; text-align:center; text-decoration:none; margin-top:10px;">${t('instapayPayNow')}</a>
       <p style="margin-top:6px; font-size:12.5px;">${t('writeCodeInTransfer')} <strong>${code}</strong></p>
       <a href="${waProofLink}" target="_blank" rel="noopener" style="display:block; text-align:center; margin-top:10px; background:#25D366; color:#fff; padding:10px; border-radius:8px; font-weight:700; font-size:13px; text-decoration:none;">${t('sendProofOnWhatsapp')}</a>
+      ${pendingReviewNote}
     ` :
     `<p style="margin-top:10px;">${t('cashInstructions')}</p>`;
 

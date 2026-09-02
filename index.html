@@ -123,6 +123,27 @@
     transition:background .15s, color .15s;
   }
   .lang-toggle:hover{background:var(--apricot); color:var(--green-deep);}
+  .business-banner{
+    background:var(--green-mid);
+    color:#fff;
+    padding:9px 16px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    flex-wrap:wrap;
+    font-size:12.5px;
+    font-weight:700;
+    text-align:center;
+  }
+  .business-banner button{
+    background:var(--apricot);
+    color:var(--green-deep);
+    border-radius:20px;
+    padding:5px 14px;
+    font-size:12px;
+    font-weight:800;
+    cursor:pointer;
+  }
+  .business-banner.active{background:var(--apricot-dark);}
+  .business-banner.active button{background:var(--cream); color:var(--green-deep);}
   .cart-count{
     background:var(--green-deep); color:var(--cream);
     border-radius:50%; width:20px; height:20px;
@@ -302,12 +323,43 @@
     font-weight:600;
     flex:1; min-width:0;
     white-space:normal; word-break:break-word;
+    display:flex; align-items:center; gap:6px;
+  }
+  .board-row .name svg{
+    width:22px; height:22px; flex-shrink:0; display:inline-block;
   }
   .board-row .price{
     font-family:'Cairo'; font-weight:800; color:var(--apricot); font-size:16px;
     flex-shrink:0; white-space:nowrap;
   }
   .board-note{font-size:11px; color:#B9C2B7; margin-top:10px; text-align:center;}
+  .prices-date-shine{
+    position:relative;
+    overflow:hidden;
+    text-align:center;
+    font-family:'Cairo', sans-serif;
+    font-weight:800;
+    font-size:14px;
+    color:var(--apricot);
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(201,178,80,.4);
+    border-radius:8px;
+    padding:8px 10px;
+    margin-bottom:10px;
+    letter-spacing:.3px;
+  }
+  .prices-date-shine::after{
+    content:"";
+    position:absolute; top:0; left:-60%; width:40%; height:100%;
+    background:linear-gradient(120deg, transparent, rgba(255,255,255,.65), transparent);
+    transform:skewX(-20deg);
+    animation:priceDateShine 3.2s ease-in-out infinite;
+  }
+  @keyframes priceDateShine{
+    0%{left:-60%;}
+    35%{left:130%;}
+    100%{left:130%;}
+  }
 
   /* ===== Catalog ===== */
   .catalog{
@@ -770,6 +822,8 @@
   </div>
 </header>
 
+<!-- وضع الجملة (مطاعم وفنادق) متوقف مؤقتاً - الكود لسه موجود جاهز لما نرجعه -->
+
 <section class="hero">
   <div class="logo-orbit-wrap">
     <div class="logo-3d">
@@ -946,10 +1000,11 @@ const TRANSLATIONS = {
     heroTitle: 'خضار وفاكهة <span>طازة</span> من السوق<br>لباب البيت أينما كنت',
     heroSubtitle: 'خضار وفاكهة يومية بأسعار واضحة، توصيل لباب البيت',
     scrollHintText: 'عايز تطلب؟ انزل تحت واضغط على المنتج',
-    trust1: 'توصيل بـ15 ج.م لكل الطلبات — ومجاني فوق 200 ج.م',
+    trust1: 'توصيل بـ20 ج.م لكل الطلبات — ومجاني فوق 200 ج.م',
     trust2: 'بضاعة طازة يومياً من السوق',
     trust3: 'دفع آمن أو عند الاستلام',
     boardNoteVeg: 'أسعار الخضار بتتحدث يومياً حسب سعر السوق',
+    pricesLastUpdated: 'آخر تحديث للأسعار',
     boardNoteHerbs: 'أسعار الخضرة بتتحدث يومياً حسب سعر السوق',
     boardNoteFruit: 'أسعار الفاكهة بتتحدث يومياً حسب سعر السوق',
     catVeg: 'خضروات',
@@ -975,6 +1030,14 @@ const TRANSLATIONS = {
     pricePerUnit: 'السعر لكل',
     minOrderHint: 'الحد الأدنى للطلب: 1 كيلو (تقدر تزود بنص أو ربع كيلو)',
     minOrderValueHint: 'محتاج تضيف {amount} {currency} كمان عشان توصل للحد الأدنى للطلب (50 ج.م)',
+    businessBannerOff: '🍽️ عندك مطعم أو فندق؟ اطلب بأسعار الجملة',
+    businessBannerBtnOn: 'فعّل وضع الجملة',
+    businessBannerOn: '🍽️ وضع طلبات المطاعم والفنادق مفعّل — خصم {percent}% والحد الأدنى 1000 ج.م',
+    businessBannerBtnOff: 'رجوع للأسعار العادية',
+    businessNameLabel: 'اسم المطعم / الفندق',
+    businessNamePlaceholder: 'اكتب اسم المطعم أو الفندق',
+    alertBusinessName: 'من فضلك اكتب اسم المطعم أو الفندق',
+    minBusinessOrderValueHint: 'الحد الأدنى لطلبات المطاعم والفنادق 1000 ج.م — محتاج تضيف {amount} {currency} كمان',
     addToCart: 'أضف للسلة',
     emptyCart: 'السلة فاضية دلوقتي 🧺<br>ابدأ اختار من المنتجات فوق',
     remove: 'إزالة',
@@ -1047,10 +1110,11 @@ const TRANSLATIONS = {
     heroTitle: 'Fresh <span>Vegetables & Fruit</span> from the Market<br>To Your Door, Wherever You Are',
     heroSubtitle: 'Daily fresh produce at clear prices, delivered to your doorstep',
     scrollHintText: 'Want to order? Scroll down and tap a product',
-    trust1: 'Delivery for 15 EGP — free above 200 EGP',
+    trust1: 'Delivery for 20 EGP — free above 200 EGP',
     trust2: 'Fresh produce from the market every day',
     trust3: 'Secure payment or cash on delivery',
     boardNoteVeg: 'Vegetable prices update daily based on market rates',
+    pricesLastUpdated: 'Prices last updated',
     boardNoteHerbs: 'Herb prices update daily based on market rates',
     boardNoteFruit: 'Fruit prices update daily based on market rates',
     catVeg: 'Vegetables',
@@ -1076,6 +1140,14 @@ const TRANSLATIONS = {
     pricePerUnit: 'Price per',
     minOrderHint: 'Minimum order: 1 kg (you can add in half or quarter kg steps)',
     minOrderValueHint: 'Add {amount} {currency} more to reach the minimum order value (50 EGP)',
+    businessBannerOff: '🍽️ Have a restaurant or hotel? Order at wholesale prices',
+    businessBannerBtnOn: 'Switch to wholesale mode',
+    businessBannerOn: '🍽️ Restaurant & hotel orders mode is on — {percent}% off, minimum order 1000 EGP',
+    businessBannerBtnOff: 'Back to regular prices',
+    businessNameLabel: 'Restaurant / Hotel Name',
+    businessNamePlaceholder: 'Enter the restaurant or hotel name',
+    alertBusinessName: 'Please enter the restaurant or hotel name',
+    minBusinessOrderValueHint: 'Minimum for restaurant/hotel orders is 1000 EGP — add {amount} {currency} more',
     addToCart: 'Add to Cart',
     emptyCart: 'Your cart is empty 🧺<br>Start choosing from the products above',
     remove: 'Remove',
@@ -1170,6 +1242,7 @@ function setLang(lang){
   const trackResultEl = document.getElementById('trackResult');
   if(trackResultEl) { trackResultEl.classList.remove('show'); trackResultEl.innerHTML = ''; }
   if(typeof showLastOrderHint === 'function') showLastOrderHint();
+  if(typeof renderBusinessBanner === 'function') renderBusinessBanner();
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
@@ -1255,12 +1328,53 @@ const VODAFONE_CASH_NUMBER = '01023441502';
 const INSTAPAY_HANDLE = 'hassan1hamdy18@instapay';
 const INSTAPAY_LINK = 'https://ipn.eg/S/hassan1hamdy18/instapay/8HqrJh';
 
-/* رسوم التوصيل: 15 ج.م لو الطلب أقل من 200 ج.م، ومجاني لو 200 ج.م أو أكتر */
-const DELIVERY_FEE = 15;
+/* رسوم التوصيل: 20 ج.م لو الطلب أقل من 200 ج.م، ومجاني لو 200 ج.م أو أكتر */
+const DELIVERY_FEE = 20;
 const FREE_DELIVERY_THRESHOLD = 200;
 
 /* الحد الأدنى لإجمالي الطلب عشان العميل يقدر يكمل */
 const MIN_ORDER_VALUE = 50;
+
+/* ============================================================
+   تاريخ آخر تحديث لأسعار الخضار — يتحدث يدوياً كل ما حسن يبعت
+   قائمة أسعار جديدة. سيبه فاضي لحد أول تحديث.
+   الصيغة المتوقعة: '٢ سبتمبر ٢٠٢٦' أو أي نص تاريخ عادي.
+   ============================================================ */
+const VEG_PRICES_LAST_UPDATED = '2 سبتمبر 2026';
+
+/* ============================================================
+   وضع طلبات المطاعم والفنادق (جملة)
+   لتغيير نسبة خصم الجملة لاحقاً، غيّر الرقم ده بس:
+   ============================================================ */
+const WHOLESALE_DISCOUNT_PERCENT = 10;
+const MIN_BUSINESS_ORDER_VALUE = 1000;
+let businessMode = false;
+
+function displayPrice(p){
+  if(!businessMode) return p.retail;
+  return Math.round(p.retail * (1 - WHOLESALE_DISCOUNT_PERCENT/100) * 100)/100;
+}
+
+function renderBusinessBanner(){
+  const banner = document.getElementById('businessModeBanner');
+  if(!banner) return;
+  if(businessMode){
+    banner.classList.add('active');
+    banner.innerHTML = `<span>${t('businessBannerOn').replace('{percent}', WHOLESALE_DISCOUNT_PERCENT)}</span><button id="businessModeToggleBtn" type="button">${t('businessBannerBtnOff')}</button>`;
+  } else {
+    banner.classList.remove('active');
+    banner.innerHTML = `<span>${t('businessBannerOff')}</span><button id="businessModeToggleBtn" type="button">${t('businessBannerBtnOn')}</button>`;
+  }
+  const btn = document.getElementById('businessModeToggleBtn');
+  if(btn){
+    btn.addEventListener('click', ()=>{
+      businessMode = !businessMode;
+      renderBusinessBanner();
+      if(typeof renderGrids === 'function') renderGrids();
+      if(typeof renderCart === 'function') renderCart();
+    });
+  }
+}
 
 /* إشعار تليجرام فوري للإدارة عند وصول طلب جديد */
 const TELEGRAM_BOT_TOKEN = '8756588965:AAFG59RizpAXXWFzeseU1PJM19V_7s4hzeQ';
@@ -1271,8 +1385,9 @@ function notifyTelegram(order){
     const itemsText = order.items.map(it=>`• ${it.name} × ${it.qty} ${it.unit}`).join('\n');
     const methodText = order.deliveryMethod==='delivery' ? ('توصيل: '+order.address) : 'استلام من السوق';
     const payText = paymentLabel(order.paymentMethod);
+    const businessLine = order.orderType==='business' ? `\n🍽️ طلب مطعم/فندق: ${order.businessName || ''}` : '';
     const text =
-`🛒 طلب جديد!
+`🛒 طلب جديد!${businessLine}
 كود الطلب: ${order.code}
 الاسم: ${order.name}
 الموبايل: ${order.phone}
@@ -1342,20 +1457,23 @@ const boardVeg = document.getElementById('boardVeg');
 const boardHerbs = document.getElementById('boardHerbs');
 const boardFruit = document.getElementById('boardFruit');
 
+function boardIcon(p){ return p.svg ? p.svg : p.emoji; }
+
 function renderBoards(){
   const cur = t('currency');
   const vegRows = PRODUCTS.filter(p=>p.cat==='veg' && !isHerb(p)).map(p=>
-    `<div class="board-row"><span class="name">${p.emoji} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
+    `<div class="board-row"><span class="name">${boardIcon(p)} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
   ).join('');
-  boardVeg.innerHTML = vegRows + `<div class="board-note">${t('boardNoteVeg')}</div>`;
+  const vegDateLine = VEG_PRICES_LAST_UPDATED ? `<div class="prices-date-shine">${t('pricesLastUpdated')}: ${VEG_PRICES_LAST_UPDATED}</div>` : '';
+  boardVeg.innerHTML = vegDateLine + vegRows + `<div class="board-note">${t('boardNoteVeg')}</div>`;
 
   const herbRows = PRODUCTS.filter(p=>p.cat==='veg' && isHerb(p)).map(p=>
-    `<div class="board-row"><span class="name">${p.emoji} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
+    `<div class="board-row"><span class="name">${boardIcon(p)} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
   ).join('');
   boardHerbs.innerHTML = herbRows + `<div class="board-note">${t('boardNoteHerbs')}</div>`;
 
   const fruitRows = PRODUCTS.filter(p=>p.cat==='fruit').map(p=>
-    `<div class="board-row"><span class="name">${p.emoji} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
+    `<div class="board-row"><span class="name">${boardIcon(p)} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
   ).join('');
   boardFruit.innerHTML = fruitRows + `<div class="board-note">${t('boardNoteFruit')}</div>`;
 }
@@ -1368,6 +1486,7 @@ const fruitGrid = document.getElementById('fruitGrid');
 function cardHTML(p){
   const qty = cart[p.id] || 0;
   const cur = t('currency');
+  const price = displayPrice(p);
   return `
   <div class="card" data-id="${p.id}">
     ${p.popular ? `<div class="popular-badge">${t('popularBadge')}</div>` : ''}
@@ -1375,7 +1494,7 @@ function cardHTML(p){
     <div class="card-body">
       <div class="card-name">${pName(p)}</div>
       <div class="card-unit">${t('pricePerUnit')} ${pUnit(p)}</div>
-      <div class="card-price">${p.retail} ${cur} <span>/ ${pUnit(p)}</span></div>
+      <div class="card-price">${price} ${cur} <span>/ ${pUnit(p)}</span></div>
       <div class="qty-row">
         <div class="stepper">
           <button class="dec">−</button>
@@ -1454,7 +1573,8 @@ function saveCart(){ localStorage.setItem('msweis_cart', JSON.stringify(cart)); 
 function cartEntries(){
   return Object.entries(cart).filter(([id,qty])=>qty>0).map(([id,qty])=>{
     const p = PRODUCTS.find(x=>x.id===id);
-    return {p, qty, price:p.retail, lineTotal: Math.round(p.retail*qty*100)/100};
+    const price = displayPrice(p);
+    return {p, qty, price, lineTotal: Math.round(price*qty*100)/100};
   });
 }
 
@@ -1488,14 +1608,16 @@ function renderCart(){
   sumTotal.textContent = totalPrice + ' ' + cur;
 
   const minHintEl = document.getElementById('minOrderValueHint');
+  const activeMinOrder = businessMode ? MIN_BUSINESS_ORDER_VALUE : MIN_ORDER_VALUE;
   if(entries.length===0){
     if(minHintEl){ minHintEl.style.display = 'none'; }
-  } else if(totalPrice < MIN_ORDER_VALUE){
+  } else if(totalPrice < activeMinOrder){
     checkoutBtn.disabled = true;
     if(minHintEl){
       minHintEl.style.display = 'block';
-      const remaining = Math.round((MIN_ORDER_VALUE - totalPrice)*100)/100;
-      minHintEl.textContent = t('minOrderValueHint').replace('{amount}', remaining).replace('{currency}', cur);
+      const remaining = Math.round((activeMinOrder - totalPrice)*100)/100;
+      const hintKey = businessMode ? 'minBusinessOrderValueHint' : 'minOrderValueHint';
+      minHintEl.textContent = t(hintKey).replace('{amount}', remaining).replace('{currency}', cur);
     }
   } else {
     checkoutBtn.disabled = false;
@@ -1528,6 +1650,12 @@ function openCheckout(){
   paymentMethod = 'vodafone';
   modalContent.innerHTML = `
     <h3>${t('checkoutTitle')}</h3>
+    ${businessMode ? `
+    <div class="field">
+      <label>${t('businessNameLabel')}</label>
+      <input type="text" id="fBusinessName" placeholder="${t('businessNamePlaceholder')}">
+    </div>
+    ` : ''}
     <div class="field">
       <label>${t('nameLabel')}</label>
       <input type="text" id="fName" placeholder="${t('namePlaceholder')}">
@@ -1660,7 +1788,12 @@ async function submitOrder(){
   const phone = document.getElementById('fPhone').value.trim();
   const address = document.getElementById('fAddress') ? document.getElementById('fAddress').value.trim() : '';
   const notes = document.getElementById('fNotes').value.trim();
+  const businessName = businessMode && document.getElementById('fBusinessName') ? document.getElementById('fBusinessName').value.trim() : '';
 
+  if(businessMode && !businessName){
+    alert(t('alertBusinessName'));
+    return;
+  }
   if(!name || !phone){
     alert(t('alertNamePhone'));
     return;
@@ -1676,8 +1809,10 @@ async function submitOrder(){
 
   const entries = cartEntries();
   const subtotal = entries.reduce((s,e)=>s+e.lineTotal,0);
-  if(subtotal < MIN_ORDER_VALUE){
-    alert(t('minOrderValueHint').replace('{amount}', Math.round((MIN_ORDER_VALUE-subtotal)*100)/100).replace('{currency}', t('currency')));
+  const activeMinOrder = businessMode ? MIN_BUSINESS_ORDER_VALUE : MIN_ORDER_VALUE;
+  if(subtotal < activeMinOrder){
+    const hintKey = businessMode ? 'minBusinessOrderValueHint' : 'minOrderValueHint';
+    alert(t(hintKey).replace('{amount}', Math.round((activeMinOrder-subtotal)*100)/100).replace('{currency}', t('currency')));
     return;
   }
   const deliveryFee = calcDeliveryFee(subtotal, deliveryMethod);
@@ -1689,6 +1824,8 @@ async function submitOrder(){
   const order = {
     code, name, phone, address, notes,
     deliveryMethod, paymentMethod, fawryRef,
+    orderType: businessMode ? 'business' : 'retail',
+    businessName: businessMode ? businessName : null,
     items: entries.map(e=>({name:e.p.name, qty:e.qty, unit:e.p.unit, price:e.price, lineTotal:e.lineTotal})),
     subtotal, deliveryFee, total,
     status: STATUS_STAGES[0],
@@ -2096,6 +2233,7 @@ function renderAdminOrders(){
           <span class="admin-order-code">${o.code}</span>
           <span style="font-family:'Cairo'; font-weight:800; color:var(--apricot-dark);">${o.total} ج.م</span>
         </div>
+        ${o.orderType==='business' ? `<div style="background:var(--apricot); color:var(--green-deep); border-radius:6px; padding:3px 8px; font-size:11px; font-weight:800; display:inline-block; margin-bottom:6px;">🍽️ طلب مطعم/فندق${o.businessName ? ' — '+o.businessName : ''}</div>` : ''}
         <div class="admin-order-meta">
           👤 ${o.name} — 📞 ${o.phone}<br>
           🧺 ${itemsSummary}<br>
@@ -2198,6 +2336,7 @@ logoHome.addEventListener('click', (e)=>{
 renderBoards();
 renderGrids();
 renderCart();
+renderBusinessBanner();
 </script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";

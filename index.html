@@ -581,7 +581,8 @@
     flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:12.5px; background:var(--white); color:var(--ink);
   }
 
-  .reveal{opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal{opacity:1; transform:none; transition:opacity .6s ease, transform .6s ease;}
+  .reveal.pre{opacity:0; transform:translateY(18px);}
   .reveal.in{opacity:1; transform:translateY(0);}
 
   footer{
@@ -2054,12 +2055,25 @@ function renderAdminOrders(){
 const revealObserver = new IntersectionObserver((entries)=>{
   entries.forEach(entry=>{
     if(entry.isIntersecting){
+      entry.target.classList.remove('pre');
       entry.target.classList.add('in');
       revealObserver.unobserve(entry.target);
     }
   });
 }, {threshold:0.12});
-document.querySelectorAll('.reveal').forEach(el=> revealObserver.observe(el));
+document.querySelectorAll('.reveal').forEach(el=>{
+  el.classList.add('pre');
+  revealObserver.observe(el);
+});
+// safety net: if the observer ever fails to fire (older browsers, quirky mobile
+// webviews, etc.) force-reveal everything shortly after load so content never
+// stays permanently hidden.
+setTimeout(()=>{
+  document.querySelectorAll('.reveal.pre').forEach(el=>{
+    el.classList.remove('pre');
+    el.classList.add('in');
+  });
+}, 2500);
 
 /* ===================== HEADER LOGO EFFECTS ===================== */
 if('scrollRestoration' in history){ history.scrollRestoration = 'manual'; }

@@ -227,6 +227,29 @@
   .hero h1 span{color:var(--apricot);}
   .hero p{color:#C9D1C9; font-size:14.5px; margin-top:8px;}
 
+  .reorder-banner{
+    max-width:900px; margin:26px auto 0; padding:0 16px;
+  }
+  .reorder-card{
+    background:var(--paper);
+    border:1.5px solid var(--apricot);
+    border-radius:16px;
+    padding:16px 18px;
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px;
+    box-shadow:var(--shadow-sm);
+  }
+  .reorder-text{flex:1; min-width:220px;}
+  .reorder-title{font-weight:800; color:var(--green-deep); font-size:15px; margin-bottom:4px;}
+  .reorder-items{font-size:13px; color:var(--ink-soft); line-height:1.6;}
+  .reorder-btn{
+    background:var(--apricot); color:var(--green-deep);
+    font-weight:800; font-size:14px;
+    padding:10px 20px; border-radius:30px;
+    white-space:nowrap;
+    box-shadow:var(--shadow-sm);
+    transition:transform .15s;
+  }
+  .reorder-btn:hover{transform:translateY(-2px);}
   .quality-badge{
     display:inline-flex; align-items:center; gap:8px;
     background:linear-gradient(135deg, var(--apricot), var(--apricot-dark));
@@ -929,6 +952,8 @@
   </div>
 </section>
 
+<div id="reorderBanner"></div>
+
 <section class="catalog reveal" id="veg">
   <div class="catalog-head">
     <h2 data-i18n="catVeg">خضروات</h2>
@@ -1075,13 +1100,16 @@ const TRANSLATIONS = {
     heroTitle: 'خضار وفاكهة <span>طازة</span> من السوق<br>لباب البيت أينما كنت',
     heroSubtitle: 'خضار وفاكهة يومية بأسعار واضحة، توصيل لباب البيت',
     scrollHintText: 'عايز تطلب؟ انزل تحت واضغط على المنتج',
-    trust1: 'توصيل بـ20 ج.م لكل الطلبات — ومجاني فوق 200 ج.م',
+    trust1: 'توصيل بـ20 ج.م لكل الطلبات',
     trust2: 'بضاعة طازة يومياً من السوق',
     trust3: 'دفع آمن أو عند الاستلام',
     boardNoteVeg: 'أسعار الخضار بتتحدث يومياً حسب سعر السوق',
     pricesLastUpdated: 'آخر تحديث للأسعار',
     orderFloatLabel: 'اطلب هنا',
     qualityBadge: 'كل منتجاتنا درجة أولى',
+    reorderTitle: '👋 أهلاً بيك تاني! طلبت قبل كده:',
+    reorderBtn: '🔁 أعد نفس الطلب',
+    reorderAdded: 'تمام! ضفنالك نفس أصناف آخر طلب في السلة',
     boardNoteHerbs: 'أسعار الخضرة بتتحدث يومياً حسب سعر السوق',
     boardNoteFruit: 'أسعار الفاكهة بتتحدث يومياً حسب سعر السوق',
     catVeg: 'خضروات',
@@ -1187,13 +1215,16 @@ const TRANSLATIONS = {
     heroTitle: 'Fresh <span>Vegetables & Fruit</span> from the Market<br>To Your Door, Wherever You Are',
     heroSubtitle: 'Daily fresh produce at clear prices, delivered to your doorstep',
     scrollHintText: 'Want to order? Scroll down and tap a product',
-    trust1: 'Delivery for 20 EGP — free above 200 EGP',
+    trust1: 'Delivery for 20 EGP on all orders',
     trust2: 'Fresh produce from the market every day',
     trust3: 'Secure payment or cash on delivery',
     boardNoteVeg: 'Vegetable prices update daily based on market rates',
     pricesLastUpdated: 'Prices last updated',
     orderFloatLabel: 'Order',
     qualityBadge: 'All our products are Grade A',
+    reorderTitle: '👋 Welcome back! You previously ordered:',
+    reorderBtn: '🔁 Reorder the same items',
+    reorderAdded: "Done! We've added your last order's items to your cart",
     boardNoteHerbs: 'Herb prices update daily based on market rates',
     boardNoteFruit: 'Fruit prices update daily based on market rates',
     catVeg: 'Vegetables',
@@ -1322,6 +1353,7 @@ function setLang(lang){
   if(trackResultEl) { trackResultEl.classList.remove('show'); trackResultEl.innerHTML = ''; }
   if(typeof showLastOrderHint === 'function') showLastOrderHint();
   if(typeof renderBusinessBanner === 'function') renderBusinessBanner();
+  if(typeof renderReorderBanner === 'function') renderReorderBanner();
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
@@ -1335,6 +1367,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     });
   }
   if(typeof showLastOrderHint === 'function') showLastOrderHint();
+  if(typeof renderReorderBanner === 'function') renderReorderBanner();
 });
 
 /* ===================== DATA ===================== */
@@ -1411,7 +1444,7 @@ const VODAFONE_CASH_NUMBER = '01023441502';
 const INSTAPAY_HANDLE = 'hassan1hamdy18@instapay';
 const INSTAPAY_LINK = 'https://ipn.eg/S/hassan1hamdy18/instapay/8HqrJh';
 
-/* رسوم التوصيل: 20 ج.م لو الطلب أقل من 200 ج.م، ومجاني لو 200 ج.م أو أكتر */
+/* رسوم التوصيل: 20 ج.م ثابتة على كل الطلبات، من غير حد مجاني */
 const DELIVERY_FEE = 20;
 const FREE_DELIVERY_THRESHOLD = 200;
 
@@ -1500,7 +1533,7 @@ ${itemsText}
 
 function calcDeliveryFee(subtotal, method){
   if(method !== 'delivery') return 0;
-  return subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  return DELIVERY_FEE;
 }
 
 /* حدود التوصيل بتاعتنا بتشمل منطقة السلام كلها */
@@ -1861,7 +1894,6 @@ function updateCheckoutSummary(){
       <span>${t('deliveryFeeLabel')}</span>
       <span>${fee === 0 ? t('freeDeliveryLabel') : fee+' '+cur}</span>
     </div>
-    ${deliveryMethod==='delivery' && fee > 0 ? `<div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;">${t('freeDeliveryHint')} ${FREE_DELIVERY_THRESHOLD} ${cur}</div>` : ''}
     <div style="display:flex; justify-content:space-between; font-weight:800; border-top:1px solid var(--line); padding-top:6px; margin-top:4px;">
       <span>${t('grandTotal')}</span><span>${grand} ${cur}</span>
     </div>
@@ -1917,7 +1949,7 @@ async function submitOrder(){
     deliveryMethod, paymentMethod, fawryRef,
     orderType: businessMode ? 'business' : 'retail',
     businessName: businessMode ? businessName : null,
-    items: entries.map(e=>({name:e.p.name, qty:e.qty, unit:e.p.unit, price:e.price, lineTotal:e.lineTotal})),
+    items: entries.map(e=>({id:e.p.id, name:e.p.name, qty:e.qty, unit:e.p.unit, price:e.price, lineTotal:e.lineTotal})),
     subtotal, deliveryFee, total,
     status: STATUS_STAGES[0],
     createdAt: window.__fb.serverTimestamp()
@@ -1938,7 +1970,9 @@ async function submitOrder(){
 
   try{
     localStorage.setItem('msweis_last_order_code', code);
+    localStorage.setItem('msweis_last_order_items', JSON.stringify(entries.map(e=>({id:e.p.id, qty:e.qty}))));
     showLastOrderHint();
+    if(typeof renderReorderBanner === 'function') renderReorderBanner();
   }catch(e){}
 
   cart = {};
@@ -2014,6 +2048,59 @@ function showLastOrderHint(){
   const l2 = document.getElementById('lastOrderLink2');
   if(l1) l1.addEventListener('click', go);
   if(l2) l2.addEventListener('click', go);
+}
+
+function renderReorderBanner(){
+  const container = document.getElementById('reorderBanner');
+  if(!container) return;
+  let savedItems;
+  try{
+    const raw = localStorage.getItem('msweis_last_order_items');
+    savedItems = raw ? JSON.parse(raw) : null;
+  }catch(e){ savedItems = null; }
+
+  if(!savedItems || !Array.isArray(savedItems) || savedItems.length===0){
+    container.innerHTML = '';
+    return;
+  }
+
+  const resolved = savedItems
+    .map(it=>({ ...it, product: PRODUCTS.find(p=>p.id===it.id) }))
+    .filter(it=>it.product);
+
+  if(resolved.length===0){
+    container.innerHTML = '';
+    return;
+  }
+
+  const namesText = resolved.map(it=>`${pName(it.product)} (${formatQty(it.qty)} ${pUnit(it.product)})`).join('، ');
+
+  container.innerHTML = `
+    <div class="reorder-banner">
+      <div class="reorder-card">
+        <div class="reorder-text">
+          <div class="reorder-title">${t('reorderTitle')}</div>
+          <div class="reorder-items">${namesText}</div>
+        </div>
+        <button class="reorder-btn" id="reorderBtn" type="button">${t('reorderBtn')}</button>
+      </div>
+    </div>
+  `;
+
+  const btn = document.getElementById('reorderBtn');
+  if(btn){
+    btn.addEventListener('click', ()=>{
+      resolved.forEach(it=>{
+        cart[it.id] = Math.round(((cart[it.id]||0) + it.qty)*100)/100;
+      });
+      saveCart();
+      renderCart();
+      renderGrids();
+      alert(t('reorderAdded'));
+      overlay.classList.add('open');
+      drawer.classList.add('open');
+    });
+  }
 }
 
 trackBtn.addEventListener('click', async ()=>{
@@ -2428,6 +2515,7 @@ renderBoards();
 renderGrids();
 renderCart();
 renderBusinessBanner();
+renderReorderBanner();
 </script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";

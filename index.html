@@ -1434,7 +1434,7 @@ const PRODUCTS = [
   {id:'v3', name:'بصل أحمر', nameEn:'Red Onion', unit:'كيلو', unitEn:'kg', emoji:'🧅', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><ellipse cx="0" cy="8" rx="16" ry="20" fill="#A8324A"/><ellipse cx="0" cy="8" rx="16" ry="20" fill="none" stroke="#7A2138" stroke-width="1"/><path d="M-10 -2 Q0 4 10 -2" fill="none" stroke="#7A2138" stroke-width="1" opacity="0.6"/><path d="M-11 6 Q0 12 11 6" fill="none" stroke="#7A2138" stroke-width="1" opacity="0.6"/><path d="M-9 14 Q0 19 9 14" fill="none" stroke="#7A2138" stroke-width="1" opacity="0.6"/><path d="M0 -12 L-3 -20 M0 -12 L3 -20 M0 -12 L0 -21" stroke="#8A6A3A" stroke-width="1.4" stroke-linecap="round"/><ellipse cx="-5" cy="0" rx="3" ry="6" fill="#C24A63" opacity="0.7"/></g></svg>', cat:'veg', retail:19.5, margin:1.5},
   {id:'v4', name:'طماطم', nameEn:'Tomato', unit:'كيلو', unitEn:'kg', emoji:'🍅', cat:'veg', retail:25, margin:2.0, popular:true},
   {id:'v5', name:'جزر', nameEn:'Carrot', unit:'كيلو', unitEn:'kg', emoji:'🥕', cat:'veg', retail:25, margin:2.0},
-  {id:'v7', name:'خيار', nameEn:'Cucumber', unit:'كيلو', unitEn:'kg', emoji:'🥒', cat:'veg', retail:25, margin:2.0},
+  {id:'v7', name:'خيار', nameEn:'Cucumber', unit:'كيلو', unitEn:'kg', emoji:'🥒', cat:'veg', retail:30, margin:2.0},
   {id:'v10', name:'كوسة', nameEn:'Zucchini', unit:'كيلو', unitEn:'kg', emoji:'🥒', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,33)"><rect x="-7" y="-18" width="14" height="34" rx="7" fill="#9CCC65"/><rect x="-7" y="-18" width="14" height="34" rx="7" fill="none" stroke="#7CAE4E" stroke-width="1"/><path d="M-4 -10 L4 -10 M-4 -2 L4 -2 M-4 6 L4 6" stroke="#7CAE4E" stroke-width="1" opacity="0.6"/><g transform="translate(0,-19)"><ellipse cx="0" cy="-3" rx="2.6" ry="4" fill="#F2A93B"/><ellipse cx="4" cy="0" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(72 4 0)"/><ellipse cx="-4" cy="0" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(-72 -4 0)"/><ellipse cx="2.5" cy="4" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(144 2.5 4)"/><ellipse cx="-2.5" cy="4" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(-144 -2.5 4)"/><circle cx="0" cy="0" r="2" fill="#C97A1E"/></g></g></svg>', cat:'veg', retail:30, margin:2.0},
   {id:'v6', name:'باذنجان رومي', nameEn:'Long Eggplant', unit:'كيلو', unitEn:'kg', emoji:'🍆', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><path d="M0 -10 C9 -10 14 -2 13 8 C12 16 6 21 0 21 C-6 21 -12 16 -13 8 C-14 -2 -9 -10 0 -10 Z" fill="#241522"/><path d="M0 -10 C9 -10 14 -2 13 8 C12 16 6 21 0 21 C-6 21 -12 16 -13 8 C-14 -2 -9 -10 0 -10 Z" fill="none" stroke="#140B18" stroke-width="1"/><ellipse cx="-4" cy="0" rx="3" ry="9" fill="#3A2438" opacity="0.75"/><g stroke="#5C8A3A" stroke-width="1.4" stroke-linecap="round" fill="none"><path d="M0 -10 L-6 -16"/><path d="M0 -10 L-2.5 -17"/><path d="M0 -10 L1 -17.5"/><path d="M0 -10 L4.5 -16.5"/><path d="M0 -10 L7 -14.5"/></g><ellipse cx="0" cy="-10" rx="6.5" ry="2.6" fill="#4C7A22"/></g></svg>', cat:'veg', retail:14, margin:1},
   {id:'v11', name:'باذنجان أسود (عروس)', nameEn:'Black Eggplant (Small)', unit:'كيلو', unitEn:'kg', emoji:'🍆', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><path d="M0 -18 C6 -18 8 -8 7 4 C6 15 3 20 0 20 C-3 20 -6 15 -7 4 C-8 -8 -6 -18 0 -18 Z" fill="#241522"/><ellipse cx="-2.5" cy="-4" rx="1.8" ry="7" fill="#3A2438" opacity="0.7"/><path d="M-3 -17 Q0 -14 3 -17 M0 -18 L0 -22" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round" fill="none"/><ellipse cx="0" cy="-17" rx="4.5" ry="2" fill="#4C7A22"/></g></svg>', cat:'veg', retail:14, margin:1},
@@ -1694,6 +1694,12 @@ const vegGrid = document.getElementById('vegGrid');
 const herbGrid = document.getElementById('herbGrid');
 const fruitGrid = document.getElementById('fruitGrid');
 
+function isPopular(p){
+  const flag = productFlags[p.id];
+  if(flag && flag.popular !== undefined) return !!flag.popular;
+  return !!p.popular;
+}
+
 function cardHTML(p){
   const qty = cart[p.id] || 0;
   const cur = t('currency');
@@ -1702,7 +1708,7 @@ function cardHTML(p){
   const outOfStock = isOutOfStock(p);
   return `
   <div class="card${outOfStock ? ' card-out-of-stock' : ''}" data-id="${p.id}">
-    ${p.popular ? `<div class="popular-badge">${t('popularBadge')}</div>` : ''}
+    ${isPopular(p) ? `<div class="popular-badge">${t('popularBadge')}</div>` : ''}
     <div class="card-img">${p.svg ? p.svg : `<span>${p.emoji}</span>`}</div>
     <div class="card-body">
       ${badgesHTML ? `<div class="prod-badges">${badgesHTML}</div>` : ''}
@@ -2668,6 +2674,9 @@ function renderAdminProducts(){
           <span class="admin-order-code">${p.name}</span>
         </div>
         <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-top:6px; cursor:pointer;">
+          <input type="checkbox" class="flagPopular" ${isPopular(p) ? 'checked' : ''}> 🔥 الأكثر طلباً
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-top:6px; cursor:pointer;">
           <input type="checkbox" class="flagIsNew" ${flag.isNew ? 'checked' : ''}> 🆕 صنف جديد
         </label>
         <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-top:6px; cursor:pointer;">
@@ -2684,6 +2693,7 @@ function renderAdminProducts(){
 
     listEl.querySelectorAll('.admin-order').forEach(row=>{
       const pid = row.dataset.pid;
+      const popularCb = row.querySelector('.flagPopular');
       const isNewCb = row.querySelector('.flagIsNew');
       const lowStockCb = row.querySelector('.flagLowStock');
       const qtyRow = row.querySelector('.flagQtyRow');
@@ -2692,6 +2702,7 @@ function renderAdminProducts(){
 
       async function save(){
         const data = {
+          popular: popularCb.checked,
           isNew: isNewCb.checked,
           lowStock: lowStockCb.checked,
           remainingQty: qtyInput.value.trim(),
@@ -2704,6 +2715,7 @@ function renderAdminProducts(){
         }
       }
 
+      popularCb.addEventListener('change', save);
       isNewCb.addEventListener('change', save);
       lowStockCb.addEventListener('change', ()=>{
         qtyRow.style.display = lowStockCb.checked ? 'block' : 'none';

@@ -1562,8 +1562,9 @@ function isOutOfStock(p){
 }
 
 function displayPrice(p){
-  if(!businessMode) return p.retail;
-  return Math.round(p.retail * (1 - WHOLESALE_DISCOUNT_PERCENT/100) * 100)/100;
+  const base = effectivePrice(p);
+  if(!businessMode) return base;
+  return Math.round(base * (1 - WHOLESALE_DISCOUNT_PERCENT/100) * 100)/100;
 }
 
 function renderBusinessBanner(){
@@ -1673,18 +1674,18 @@ function boardIcon(p){ return p.svg ? p.svg : p.emoji; }
 function renderBoards(){
   const cur = t('currency');
   const vegRows = PRODUCTS.filter(p=>p.cat==='veg' && !isHerb(p)).map(p=>
-    `<div class="board-row"><span class="name">${boardIcon(p)} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
+    `<div class="board-row"><span class="name">${boardIcon(p)} ${pName(p)}</span><span class="price">${effectivePrice(p)} ${cur} / ${pUnit(p)}</span></div>`
   ).join('');
   const vegDateLine = `<div class="prices-date-shine">${t('pricesLastUpdated')}: ${todayFormatted()}</div>`;
   boardVeg.innerHTML = vegDateLine + vegRows + `<div class="board-note">${t('boardNoteVeg')}</div>`;
 
   const herbRows = PRODUCTS.filter(p=>p.cat==='veg' && isHerb(p)).map(p=>
-    `<div class="board-row"><span class="name">${boardIcon(p)} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
+    `<div class="board-row"><span class="name">${boardIcon(p)} ${pName(p)}</span><span class="price">${effectivePrice(p)} ${cur} / ${pUnit(p)}</span></div>`
   ).join('');
   boardHerbs.innerHTML = herbRows + `<div class="board-note">${t('boardNoteHerbs')}</div>`;
 
   const fruitRows = PRODUCTS.filter(p=>p.cat==='fruit').map(p=>
-    `<div class="board-row"><span class="name">${boardIcon(p)} ${pName(p)}</span><span class="price">${p.retail} ${cur} / ${pUnit(p)}</span></div>`
+    `<div class="board-row"><span class="name">${boardIcon(p)} ${pName(p)}</span><span class="price">${effectivePrice(p)} ${cur} / ${pUnit(p)}</span></div>`
   ).join('');
   boardFruit.innerHTML = fruitRows + `<div class="board-note">${t('boardNoteFruit')}</div>`;
 }
@@ -1693,6 +1694,37 @@ function renderBoards(){
 const vegGrid = document.getElementById('vegGrid');
 const herbGrid = document.getElementById('herbGrid');
 const fruitGrid = document.getElementById('fruitGrid');
+
+/* ============================================================
+   تحديث الأسعار من لوحة الإدارة مباشرة:
+   الإدارة بتكتب "سعر المحل" بس، والموقع بيحسب هامش الربح
+   ويطلعله السعر النهائي تلقائي بنفس القاعدة المتفق عليها:
+   حد أدنى 1 جنيه أو 8% من سعر المحل (أيهما أكبر)، مقرب لأقرب نص جنيه.
+   ============================================================ */
+function computeMarkup(storePrice){
+  const raw = storePrice * 0.08;
+  const halfRounded = Math.round(raw*2)/2;
+  return Math.max(1, halfRounded);
+}
+function computeRetailFromStore(storePrice){
+  return Math.round((storePrice + computeMarkup(storePrice))*100)/100;
+}
+function effectivePrice(p){
+  const flag = productFlags[p.id];
+  if(flag && flag.storePrice !== undefined && flag.storePrice !== null && flag.storePrice !== ''){
+    const sp = parseFloat(flag.storePrice);
+    if(!isNaN(sp) && sp >= 0) return computeRetailFromStore(sp);
+  }
+  return p.retail;
+}
+function effectiveStorePrice(p){
+  const flag = productFlags[p.id];
+  if(flag && flag.storePrice !== undefined && flag.storePrice !== null && flag.storePrice !== ''){
+    const sp = parseFloat(flag.storePrice);
+    if(!isNaN(sp) && sp >= 0) return sp;
+  }
+  return Math.round((p.retail - (p.margin||0))*100)/100;
+}
 
 function isPopular(p){
   const flag = productFlags[p.id];
@@ -2514,7 +2546,9 @@ function renderAdminOrders(){
     const totalMargin = latestOrdersSnapshot.filter(o=>o.status!==STATUS_CANCELLED).reduce((s,o)=>{
       const orderMargin = (o.items||[]).reduce((ms,it)=>{
         const product = PRODUCTS.find(p=>p.name===it.name);
-        return ms + (product ? (product.margin||0) * it.qty : 0);
+        if(!product) return ms;
+        const unitMargin = effectivePrice(product) - effectiveStorePrice(product);
+        return ms + unitMargin * it.qty;
       },0);
       return s + orderMargin;
     },0);
@@ -2522,7 +2556,7 @@ function renderAdminOrders(){
       const orderCost = (o.items||[]).reduce((cs,it)=>{
         const product = PRODUCTS.find(p=>p.name===it.name);
         if(!product) return cs;
-        const baseUnitPrice = product.retail - (product.margin||0);
+        const baseUnitPrice = effectiveStorePrice(product);
         return cs + baseUnitPrice * it.qty;
       },0);
       return s + orderCost;
@@ -2581,12 +2615,15 @@ function renderAdminOrders(){
       return;
     }
     list.innerHTML = filtered.map(o=>{
-      const itemsInvoiceHTML = (o.items||[]).map(it=>
-        `<div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px dashed var(--line); font-size:12px;">
-          <span>${it.name} — ${formatQty(it.qty)} ${it.unit} × ${it.price} ج.م</span>
+      const itemsInvoiceHTML = (o.items||[]).map(it=>{
+        const product = PRODUCTS.find(p=>p.name===it.name);
+        const storeUnitPrice = product ? effectiveStorePrice(product) : null;
+        const storeCostText = storeUnitPrice!==null ? ` (سعر المحل: ${storeUnitPrice} ج.م)` : '';
+        return `<div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px dashed var(--line); font-size:12px;">
+          <span>${it.name} — ${formatQty(it.qty)} ${it.unit} × ${it.price} ج.م${storeCostText}</span>
           <span style="font-weight:700;">${it.lineTotal} ج.م</span>
-        </div>`
-      ).join('');
+        </div>`;
+      }).join('');
       const isCancelled = o.status === STATUS_CANCELLED;
       const isDelivered = o.status === STATUS_STAGES[STATUS_STAGES.length-1];
       return `
@@ -2693,10 +2730,19 @@ function renderAdminProducts(){
     }
     listEl.innerHTML = filtered.map(p=>{
       const flag = productFlags[p.id] || {};
+      const currentStorePrice = effectiveStorePrice(p);
+      const currentRetail = effectivePrice(p);
       return `
       <div class="admin-order" data-pid="${p.id}">
         <div class="admin-order-head">
           <span class="admin-order-code">${p.name}</span>
+        </div>
+        <div style="background:var(--paper); border-radius:8px; padding:8px 10px; margin-top:6px;">
+          <label style="font-size:12px; font-weight:700; color:var(--green-deep);">💰 سعر المحل (${pUnit(p)})</label>
+          <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+            <input type="number" step="0.5" min="0" class="flagStorePrice" value="${currentStorePrice}" style="width:100px; padding:8px; border-radius:8px; border:1px solid var(--line); font-size:13px;">
+            <span style="font-size:12px; color:var(--ink-soft);">السعر النهائي للعميل: <strong class="storePriceComputed" style="color:var(--apricot-dark);">${currentRetail}</strong> ج.م</span>
+          </div>
         </div>
         <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin-top:6px; cursor:pointer;">
           <input type="checkbox" class="flagPopular" ${isPopular(p) ? 'checked' : ''}> 🔥 الأكثر طلباً
@@ -2718,6 +2764,9 @@ function renderAdminProducts(){
 
     listEl.querySelectorAll('.admin-order').forEach(row=>{
       const pid = row.dataset.pid;
+      const product = PRODUCTS.find(pr=>pr.id===pid);
+      const storePriceInput = row.querySelector('.flagStorePrice');
+      const computedSpan = row.querySelector('.storePriceComputed');
       const popularCb = row.querySelector('.flagPopular');
       const isNewCb = row.querySelector('.flagIsNew');
       const lowStockCb = row.querySelector('.flagLowStock');
@@ -2727,6 +2776,7 @@ function renderAdminProducts(){
 
       async function save(){
         const data = {
+          storePrice: parseFloat(storePriceInput.value) || 0,
           popular: popularCb.checked,
           isNew: isNewCb.checked,
           lowStock: lowStockCb.checked,
@@ -2740,6 +2790,13 @@ function renderAdminProducts(){
         }
       }
 
+      storePriceInput.addEventListener('input', ()=>{
+        const sp = parseFloat(storePriceInput.value);
+        if(!isNaN(sp) && sp >= 0){
+          computedSpan.textContent = computeRetailFromStore(sp);
+        }
+      });
+      storePriceInput.addEventListener('change', save);
       popularCb.addEventListener('change', save);
       isNewCb.addEventListener('change', save);
       lowStockCb.addEventListener('change', ()=>{
@@ -2821,6 +2878,7 @@ function startProductFlagsListener(){
       snap.forEach(d=>{ next[d.id] = d.data(); });
       productFlags = next;
       if(typeof renderGrids === 'function') renderGrids();
+      if(typeof renderBoards === 'function') renderBoards();
     }, ()=>{ /* ignore permission/transient errors silently */ });
   }catch(e){}
 }

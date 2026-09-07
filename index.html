@@ -2819,6 +2819,13 @@ function renderAdminProducts(){
         };
         try{
           await fb.setDoc(fb.doc(fb.db, 'product_flags', pid), data, { merge: true });
+          if(computedSpan){
+            const original = computedSpan.style.color;
+            computedSpan.style.color = 'var(--green-mid)';
+            const oldText = computedSpan.textContent;
+            computedSpan.textContent = oldText + ' ✅';
+            setTimeout(()=>{ computedSpan.textContent = oldText; computedSpan.style.color = original; }, 1500);
+          }
         }catch(e){
           alert('حصلت مشكلة في الحفظ، حاول تاني.');
         }
@@ -2831,6 +2838,13 @@ function renderAdminProducts(){
         }
       });
       storePriceInput.addEventListener('change', save);
+      storePriceInput.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          save();
+          storePriceInput.blur();
+        }
+      });
       popularCb.addEventListener('change', save);
       isNewCb.addEventListener('change', save);
       lowStockCb.addEventListener('change', ()=>{

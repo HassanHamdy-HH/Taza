@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم طازة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --green-deep:#115E28;
+    --green-mid:#1B7A38;
+    --green-light:#64A81E;
+    --cream:#F4F9F4;
+    --paper:#E9F3EA;
+    --apricot:#E67E22;
+    --apricot-dark:#C4671A;
+    --ink:#1A1E1B;
+    --ink-soft:#5B6058;
+    --line:#D7E6D9;
+    --white:#fff;
+    --danger:#E0503A;
+    --danger-bg:#FDEDEA;
+    --shadow-sm:0 2px 8px rgba(17,94,40,.08);
+    --shadow-md:0 8px 24px rgba(17,94,40,.14);
+    --sidebar-w:250px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{overflow-y:scroll;}
+  body{
+    font-family:'Tajawal', sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  a{text-decoration:none; color:inherit;}
+  button{font-family:inherit; cursor:pointer; border:none; background:none;}
+  input, select{font-family:inherit;}
+
+  /* ===== Login Screen ===== */
+  #loginScreen{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(160deg, var(--green-deep), #0c3a19);
+    padding:20px;
+  }
+  .login-card{
+    background:var(--white); border-radius:20px; padding:36px 32px;
+    max-width:380px; width:100%; box-shadow:var(--shadow-md);
+    text-align:center;
+  }
+  .login-logo{font-family:'Cairo',sans-serif; font-weight:900; font-size:28px; color:var(--green-deep); margin-bottom:4px;}
+  .login-sub{font-size:13px; color:var(--ink-soft); margin-bottom:24px;}
+  .login-card input{
+    width:100%; padding:13px 14px; border-radius:10px; border:1.5px solid var(--line);
+    font-size:14px; margin-bottom:12px;
+  }
+  .login-card input:focus{outline:none; border-color:var(--apricot);}
+  .login-btn{
+    width:100%; background:var(--green-deep); color:#fff; padding:13px; border-radius:10px;
+    font-weight:800; font-size:15px; margin-top:6px; transition:background .15s;
+  }
+  .login-btn:hover{background:var(--green-mid);}
+  .login-error{color:var(--danger); font-size:13px; margin-top:10px; min-height:18px;}
+
+  /* ===== Dashboard Shell ===== */
+  #dashboardShell{display:none; min-height:100vh;}
+  #dashboardShell.active{display:flex;}
+
+  .sidebar{
+    width:var(--sidebar-w); flex-shrink:0;
+    background:linear-gradient(180deg, var(--green-deep), #0c3a19);
+    color:#EAF2EA;
+    min-height:100vh;
+    position:sticky; top:0; align-self:flex-start;
+    display:flex; flex-direction:column;
+    padding:22px 16px;
+  }
+  .sidebar-brand{
+    font-family:'Cairo',sans-serif; font-weight:900; font-size:22px;
+    text-align:center; margin-bottom:4px; color:#fff;
+  }
+  .sidebar-sub{text-align:center; font-size:11px; color:#B9D8C2; margin-bottom:26px;}
+  .sidebar-nav{display:flex; flex-direction:column; gap:4px; flex:1;}
+  .sidebar-nav button{
+    display:flex; align-items:center; gap:10px;
+    padding:12px 14px; border-radius:10px;
+    font-size:14px; font-weight:700; color:#DCEFE1;
+    text-align:right; transition:background .15s;
+    width:100%;
+  }
+  .sidebar-nav button:hover{background:rgba(255,255,255,.08);}
+  .sidebar-nav button.active{background:var(--apricot); color:var(--green-deep);}
+  .sidebar-foot{margin-top:auto; padding-top:16px; border-top:1px solid rgba(255,255,255,.15);}
+  .sidebar-foot button{
+    width:100%; padding:10px; border-radius:10px; font-size:13px; font-weight:700;
+    color:#F5B7A9; text-align:center;
+  }
+  .sidebar-foot button:hover{background:rgba(224,80,58,.15);}
+  .sidebar-back{display:block; text-align:center; font-size:12px; color:#B9D8C2; margin-top:10px;}
+
+  .main-area{flex:1; min-width:0; padding:26px 30px 60px;}
+  .main-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;}
+  .main-header h1{font-family:'Cairo',sans-serif; font-size:22px; color:var(--green-deep);}
+  .live-dot{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); font-weight:700;}
+  .live-dot span.dot{width:8px; height:8px; border-radius:50%; background:var(--green-light); animation:pulse 1.6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ===== KPI Cards ===== */
+  .kpi-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(170px,1fr)); gap:14px; margin-bottom:26px;}
+  .kpi-card{
+    background:var(--white); border-radius:14px; padding:18px; box-shadow:var(--shadow-sm);
+    border-right:4px solid var(--green-light);
+  }
+  .kpi-card.orange{border-right-color:var(--apricot);}
+  .kpi-card.danger{border-right-color:var(--danger);}
+  .kpi-label{font-size:12.5px; color:var(--ink-soft); font-weight:700; margin-bottom:6px;}
+  .kpi-value{font-family:'Cairo',sans-serif; font-weight:900; font-size:24px; color:var(--green-deep);}
+
+  /* ===== Charts ===== */
+  .charts-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:18px; margin-bottom:26px;}
+  @media (max-width:900px){ .charts-grid{grid-template-columns:1fr;} }
+  .chart-card{
+    background:var(--white); border-radius:16px; padding:20px; box-shadow:var(--shadow-sm);
+  }
+  .chart-card h3{font-family:'Cairo',sans-serif; font-size:15px; color:var(--green-deep); margin-bottom:14px;}
+  .chart-wrap{position:relative; height:260px;}
+
+  /* ===== Toolbar / Search ===== */
+  .toolbar{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;}
+  .toolbar input, .toolbar select{
+    padding:11px 14px; border-radius:10px; border:1.5px solid var(--line); font-size:13.5px;
+    background:var(--white);
+  }
+  .toolbar input{flex:1; min-width:200px;}
+
+  /* ===== Order Cards ===== */
+  .order-list{display:flex; flex-direction:column; gap:14px;}
+  .order-card{background:var(--white); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow-sm);}
+  .order-card-head{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;}
+  .order-code{font-family:'Cairo',sans-serif; font-weight:800; color:var(--green-deep); font-size:15px;}
+  .order-total{font-family:'Cairo',sans-serif; font-weight:900; color:var(--apricot-dark); font-size:16px;}
+  .order-meta{font-size:12.5px; color:var(--ink-soft); line-height:1.8; margin-bottom:10px;}
+  .order-badge{
+    display:inline-block; font-size:11px; font-weight:800; padding:3px 10px; border-radius:20px;
+    margin-bottom:8px;
+  }
+  .badge-business{background:var(--apricot); color:var(--green-deep);}
+  .badge-cancelled{background:var(--danger-bg); color:var(--danger); border:1.5px solid var(--danger);}
+  .badge-delivered{background:var(--paper); color:var(--green-deep); border:1.5px solid var(--green-mid);}
+  .invoice-box{background:var(--paper); border-radius:10px; padding:10px 12px; margin:10px 0; font-size:12.5px;}
+  .invoice-row{display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--line);}
+  .invoice-row:last-child{border-bottom:none;}
+  .invoice-totals{font-size:12.5px; margin-top:6px; color:var(--ink-soft);}
+  .order-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .order-actions select{flex:1; min-width:140px; padding:9px; border-radius:8px; border:1.5px solid var(--line); font-size:13px;}
+  .btn-cancel{background:transparent; border:1.5px solid var(--danger); color:var(--danger); border-radius:8px; padding:9px 14px; font-weight:700; font-size:12.5px;}
+  .btn-wa{background:#25D366; color:#fff; border-radius:8px; padding:9px 14px; font-weight:700; font-size:12.5px; text-align:center; flex:1;}
+
+  /* ===== Product Cards ===== */
+  .product-list{display:flex; flex-direction:column; gap:14px;}
+  .product-card{background:var(--white); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow-sm);}
+  .product-card-head{font-family:'Cairo',sans-serif; font-weight:800; color:var(--green-deep); font-size:15px; margin-bottom:10px;}
+  .price-edit-box{background:var(--paper); border-radius:10px; padding:10px 12px; margin-bottom:10px;}
+  .price-edit-box label{font-size:12px; font-weight:700; color:var(--green-deep); display:block; margin-bottom:4px;}
+  .price-edit-row{display:flex; align-items:center; gap:10px;}
+  .price-edit-row input{width:100px; padding:8px; border-radius:8px; border:1px solid var(--line); font-size:13px;}
+  .price-computed{font-size:12px; color:var(--ink-soft);}
+  .price-computed strong{color:var(--apricot-dark);}
+  .flag-row{display:flex; align-items:center; gap:8px; font-size:13px; margin-top:8px; cursor:pointer;}
+  .flag-row.danger{color:var(--danger);}
+  .flag-qty-input{width:100%; padding:8px; border-radius:8px; border:1px solid var(--line); font-size:13px; margin-top:6px;}
+
+  .empty-state{text-align:center; padding:40px 20px; color:var(--ink-soft); font-size:14px;}
+
+  @media (max-width:820px){
+    #dashboardShell.active{flex-direction:column;}
+    .sidebar{width:100%; min-height:auto; position:relative; flex-direction:row; align-items:center; padding:12px 16px; overflow-x:auto;}
+    .sidebar-brand, .sidebar-sub, .sidebar-foot{display:none;}
+    .sidebar-nav{flex-direction:row; flex:none;}
+    .sidebar-nav button{white-space:nowrap;}
+    .main-area{padding:18px 16px 40px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Login Screen ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">لوحة تحكم طازة</div>
+    <div class="login-sub">سجّل دخولك للمتابعة</div>
+    <input type="email" id="loginEmail" placeholder="البريد الإلكتروني">
+    <input type="password" id="loginPassword" placeholder="كلمة المرور">
+    <button class="login-btn" id="loginBtn">تسجيل الدخول</button>
+    <div class="login-error" id="loginError"></div>
+    <a href="index.html" class="sidebar-back" style="color:var(--ink-soft); margin-top:14px; display:block;">← رجوع لموقع طازة</a>
+  </div>
+</div>
+
+<!-- ===== Dashboard Shell ===== -->
+<div id="dashboardShell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">طازة</div>
+    <div class="sidebar-sub">لوحة التحكم الإدارية</div>
+    <nav class="sidebar-nav">
+      <button data-view="overview" class="active">📊 نظرة عامة</button>
+      <button data-view="orders">🧾 الطلبات</button>
+      <button data-view="products">📦 المنتجات</button>
+    </nav>
+    <div class="sidebar-foot">
+      <button id="logoutBtn">🚪 تسجيل الخروج</button>
+      <a href="index.html" class="sidebar-back">← رجوع لموقع طازة</a>
+    </div>
+  </aside>
+
+  <main class="main-area">
+
+    <!-- Overview -->
+    <section class="view active" id="view-overview">
+      <div class="main-header">
+        <h1>📊 نظرة عامة</h1>
+        <span class="live-dot"><span class="dot"></span> بيانات لحظية</span>
+      </div>
+      <div class="kpi-grid" id="kpiGrid">
+        <div class="kpi-card"><div class="kpi-label">إجمالي الطلبات</div><div class="kpi-value" id="kpiTotal">–</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">لسه مش متسلمة</div><div class="kpi-value" id="kpiPending">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">إجمالي المبيعات (ج.م)</div><div class="kpi-value" id="kpiRevenue">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">رسوم التوصيل (ج.م)</div><div class="kpi-value" id="kpiDelivery">–</div></div>
+        <div class="kpi-card"><div class="kpi-label">هامش الربح (ج.م)</div><div class="kpi-value" id="kpiMargin">–</div></div>
+        <div class="kpi-card orange"><div class="kpi-label">حساب المحل (ج.م)</div><div class="kpi-value" id="kpiStoreCost">–</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>المبيعات آخر 14 يوم</h3>
+          <div class="chart-wrap"><canvas id="salesChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>حالة الطلبات</h3>
+          <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>الأصناف الأكثر مبيعاً</h3>
+        <div class="chart-wrap"><canvas id="topProductsChart"></canvas></div>
+      </div>
+    </section>
+
+    <!-- Orders -->
+    <section class="view" id="view-orders">
+      <div class="main-header">
+        <h1>🧾 الطلبات</h1>
+        <span class="live-dot"><span class="dot"></span> بيانات لحظية</span>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="orderSearch" placeholder="دور بكود الطلب أو رقم الموبايل">
+        <select id="orderStatusFilter">
+          <option value="">كل الحالات</option>
+        </select>
+      </div>
+      <div class="order-list" id="orderList"><div class="empty-state">جاري التحميل...</div></div>
+    </section>
+
+    <!-- Products -->
+    <section class="view" id="view-products">
+      <div class="main-header">
+        <h1>📦 إدارة المنتجات</h1>
+        <span class="live-dot"><span class="dot"></span> بيانات لحظية</span>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="productSearch" placeholder="دور باسم المنتج">
+      </div>
+      <div class="product-list" id="productList"><div class="empty-state">جاري التحميل...</div></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ===================== DATA ===================== */
+const PRODUCTS = [
+  {id:'v27', name:'بطاطس كارا', nameEn:'Kara Potato', unit:'كيلو', unitEn:'kg', emoji:'🥔', cat:'veg', retail:25.0, margin:2.0, popular:true},
+  {id:'v28', name:'بطاطس تايسون', nameEn:'Tyson Potato', unit:'كيلو', unitEn:'kg', emoji:'🥔', cat:'veg', retail:27.0, margin:2.0},
+  {id:'v2', name:'بصل أبيض', nameEn:'White Onion', unit:'كيلو', unitEn:'kg', emoji:'🧅', cat:'veg', retail:19.5, margin:1.5},
+  {id:'v3', name:'بصل أحمر', nameEn:'Red Onion', unit:'كيلو', unitEn:'kg', emoji:'🧅', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><ellipse cx="0" cy="8" rx="16" ry="20" fill="#A8324A"/><ellipse cx="0" cy="8" rx="16" ry="20" fill="none" stroke="#7A2138" stroke-width="1"/><path d="M-10 -2 Q0 4 10 -2" fill="none" stroke="#7A2138" stroke-width="1" opacity="0.6"/><path d="M-11 6 Q0 12 11 6" fill="none" stroke="#7A2138" stroke-width="1" opacity="0.6"/><path d="M-9 14 Q0 19 9 14" fill="none" stroke="#7A2138" stroke-width="1" opacity="0.6"/><path d="M0 -12 L-3 -20 M0 -12 L3 -20 M0 -12 L0 -21" stroke="#8A6A3A" stroke-width="1.4" stroke-linecap="round"/><ellipse cx="-5" cy="0" rx="3" ry="6" fill="#C24A63" opacity="0.7"/></g></svg>', cat:'veg', retail:19.5, margin:1.5},
+  {id:'v4', name:'طماطم', nameEn:'Tomato', unit:'كيلو', unitEn:'kg', emoji:'🍅', cat:'veg', retail:25.0, margin:2.0, popular:true},
+  {id:'v5', name:'جزر', nameEn:'Carrot', unit:'كيلو', unitEn:'kg', emoji:'🥕', cat:'veg', retail:30.0, margin:2.0},
+  {id:'v33', name:'بنجر', nameEn:'Beetroot', unit:'كيلو', unitEn:'kg', emoji:'🍠', cat:'veg', retail:43.0, margin:3.0},
+  {id:'v7', name:'خيار', nameEn:'Cucumber', unit:'كيلو', unitEn:'kg', emoji:'🥒', cat:'veg', retail:30.0, margin:2.0},
+  {id:'v10', name:'كوسة', nameEn:'Zucchini', unit:'كيلو', unitEn:'kg', emoji:'🥒', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,33)"><rect x="-7" y="-18" width="14" height="34" rx="7" fill="#9CCC65"/><rect x="-7" y="-18" width="14" height="34" rx="7" fill="none" stroke="#7CAE4E" stroke-width="1"/><path d="M-4 -10 L4 -10 M-4 -2 L4 -2 M-4 6 L4 6" stroke="#7CAE4E" stroke-width="1" opacity="0.6"/><g transform="translate(0,-19)"><ellipse cx="0" cy="-3" rx="2.6" ry="4" fill="#F2A93B"/><ellipse cx="4" cy="0" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(72 4 0)"/><ellipse cx="-4" cy="0" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(-72 -4 0)"/><ellipse cx="2.5" cy="4" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(144 2.5 4)"/><ellipse cx="-2.5" cy="4" rx="2.6" ry="4" fill="#F2A93B" transform="rotate(-144 -2.5 4)"/><circle cx="0" cy="0" r="2" fill="#C97A1E"/></g></g></svg>', cat:'veg', retail:35.5, margin:2.5},
+  {id:'v6', name:'باذنجان رومي', nameEn:'Long Eggplant', unit:'كيلو', unitEn:'kg', emoji:'🍆', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><path d="M0 -10 C9 -10 14 -2 13 8 C12 16 6 21 0 21 C-6 21 -12 16 -13 8 C-14 -2 -9 -10 0 -10 Z" fill="#241522"/><path d="M0 -10 C9 -10 14 -2 13 8 C12 16 6 21 0 21 C-6 21 -12 16 -13 8 C-14 -2 -9 -10 0 -10 Z" fill="none" stroke="#140B18" stroke-width="1"/><ellipse cx="-4" cy="0" rx="3" ry="9" fill="#3A2438" opacity="0.75"/><g stroke="#5C8A3A" stroke-width="1.4" stroke-linecap="round" fill="none"><path d="M0 -10 L-6 -16"/><path d="M0 -10 L-2.5 -17"/><path d="M0 -10 L1 -17.5"/><path d="M0 -10 L4.5 -16.5"/><path d="M0 -10 L7 -14.5"/></g><ellipse cx="0" cy="-10" rx="6.5" ry="2.6" fill="#4C7A22"/></g></svg>', cat:'veg', retail:14, margin:1},
+  {id:'v11', name:'باذنجان أسود (عروس)', nameEn:'Black Eggplant (Small)', unit:'كيلو', unitEn:'kg', emoji:'🍆', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><path d="M0 -18 C6 -18 8 -8 7 4 C6 15 3 20 0 20 C-3 20 -6 15 -7 4 C-8 -8 -6 -18 0 -18 Z" fill="#241522"/><ellipse cx="-2.5" cy="-4" rx="1.8" ry="7" fill="#3A2438" opacity="0.7"/><path d="M-3 -17 Q0 -14 3 -17 M0 -18 L0 -22" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round" fill="none"/><ellipse cx="0" cy="-17" rx="4.5" ry="2" fill="#4C7A22"/></g></svg>', cat:'veg', retail:14, margin:1},
+  {id:'v12', name:'باذنجان أبيض (عروس)', nameEn:'White Eggplant (Small)', unit:'كيلو', unitEn:'kg', emoji:'🍆', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><path d="M0 -18 C6 -18 8 -8 7 4 C6 15 3 20 0 20 C-3 20 -6 15 -7 4 C-8 -8 -6 -18 0 -18 Z" fill="#F5F0E4"/><path d="M0 -18 C6 -18 8 -8 7 4 C6 15 3 20 0 20 C-3 20 -6 15 -7 4 C-8 -8 -6 -18 0 -18 Z" fill="none" stroke="#D8CFB8" stroke-width="1"/><ellipse cx="-2.5" cy="-4" rx="1.8" ry="7" fill="#fff" opacity="0.8"/><path d="M-3 -17 Q0 -14 3 -17 M0 -18 L0 -22" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round" fill="none"/><ellipse cx="0" cy="-17" rx="4.5" ry="2" fill="#4C7A22"/></g></svg>', cat:'veg', retail:19.5, margin:1.5},
+  {id:'v8', name:'فلفل شطة', nameEn:'Hot Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', cat:'veg', retail:19.5, margin:1.5},
+  {id:'v9', name:'فلفل رومي', nameEn:'Bell Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,33)"><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="#4CAF50"/><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="none" stroke="#3C8C40" stroke-width="1"/><path d="M-6 -12 Q-9 -3 -6 12" stroke="#3C8C40" stroke-width="1" fill="none" opacity="0.6"/><path d="M6 -12 Q9 -3 6 12" stroke="#3C8C40" stroke-width="1" fill="none" opacity="0.6"/><ellipse cx="-6" cy="-2" rx="3" ry="9" fill="#6FC172" opacity="0.7"/><path d="M0 -13 Q4 -18 10 -19 Q13 -19 12 -16" fill="none" stroke="#8A6A3A" stroke-width="1.6" stroke-linecap="round"/></g></svg>', cat:'veg', retail:19.5, margin:1.5},
+  {id:'v15', name:'فلفل أحمر', nameEn:'Red Bell Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,33)"><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="#D8392C"/><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="none" stroke="#A82B20" stroke-width="1"/><path d="M-6 -12 Q-9 -3 -6 12" stroke="#A82B20" stroke-width="1" fill="none" opacity="0.6"/><path d="M6 -12 Q9 -3 6 12" stroke="#A82B20" stroke-width="1" fill="none" opacity="0.6"/><ellipse cx="-6" cy="-2" rx="3" ry="9" fill="#F0685A" opacity="0.7"/><path d="M0 -13 Q4 -18 10 -19 Q13 -19 12 -16" fill="none" stroke="#8A6A3A" stroke-width="1.6" stroke-linecap="round"/></g></svg>', cat:'veg', retail:30.0, margin:2.0},
+  {id:'v18', name:'فلفل ألوان', nameEn:'Colored Bell Pepper', unit:'كيلو', unitEn:'kg', emoji:'🌶️', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(0.85)"><g transform="translate(-9,4)"><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="#4CAF50"/><path d="M0 -13 Q4 -18 10 -19" fill="none" stroke="#8A6A3A" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(10,-2)"><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="#E13A3A"/><path d="M0 -13 Q4 -18 10 -19" fill="none" stroke="#8A6A3A" stroke-width="1.6" stroke-linecap="round"/></g><g transform="translate(-1,-14)"><path d="M0 -13 C6 -15 12 -13 14 -6 C16 1 15 10 10 16 C6 20 -6 20 -10 16 C-15 10 -16 1 -14 -6 C-12 -13 -6 -15 0 -13 Z" fill="#F2A93B"/><path d="M0 -13 Q4 -18 10 -19" fill="none" stroke="#8A6A3A" stroke-width="1.6" stroke-linecap="round"/></g></g></svg>', cat:'veg', retail:52.0, margin:4.0},
+  {id:'v13', name:'باميا', nameEn:'Okra', unit:'كيلو', unitEn:'kg', emoji:'🌿', svg:'<svg viewBox="0 0 64 64"><g transform="translate(29,32)"><path d="M-10 -16 C-6 -18 -1 -17 2 -14 C6 -9 6 6 3 15 C1 20 -3 21 -6 16 C-11 8 -12 -8 -10 -16 Z" fill="#5B9C3E"/><path d="M-6 -14 L-3 14 M-2 -15 L1 15" stroke="#3F6E2A" stroke-width="0.9" opacity="0.8"/><path d="M2 -12 C6 -13 10 -8 11 0 C12 7 9 13 4 15 C3 8 1 -3 2 -12 Z" fill="#6BAF4A"/><path d="M6 -10 L8 12" stroke="#4C8A32" stroke-width="0.9" opacity="0.7"/><path d="M12 -6 C15 -6 18 -2 17 4 C16 9 13 12 9 12 C9 6 9 -1 12 -6 Z" fill="#7BC258"/><path d="M-10 -16 L-12 -21 M2 -14 L1 -19 M12 -6 L14 -10" stroke="#3F5F2A" stroke-width="1.1" stroke-linecap="round"/></g></svg>', cat:'veg', retail:57.0, margin:4.0},
+  {id:'v34', name:'ماشروم', nameEn:'Mushroom', unit:'طبق', unitEn:'tray', emoji:'🍄', cat:'veg', retail:86.5, margin:6.5},
+  {id:'v14', name:'قتة', nameEn:'Qatta (Leafy Green)', unit:'كيلو', unitEn:'kg', emoji:'🥬', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,32)"><path d="M-16 10 C-14 -4 -6 -18 6 -19 C11 -19 13 -15 10 -12 C0 -11 -6 0 -8 12 C-9 18 -15 17 -16 10 Z" fill="#B5D96B"/><path d="M-16 10 C-14 -4 -6 -18 6 -19 C11 -19 13 -15 10 -12 C0 -11 -6 0 -8 12 C-9 18 -15 17 -16 10 Z" fill="none" stroke="#8FB84E" stroke-width="1"/><path d="M-13 5 C-9 -6 -2 -14 5 -16" stroke="#4C7A22" stroke-width="1.1" fill="none"/><path d="M-14 9 C-10 -2 -3 -11 4 -14" stroke="#4C7A22" stroke-width="1.1" fill="none"/><path d="M-13 13 C-9 3 -3 -6 3 -11" stroke="#4C7A22" stroke-width="1.1" fill="none"/><path d="M-10 15 C-7 6 -2 -2 3 -8" stroke="#4C7A22" stroke-width="1" fill="none" opacity="0.8"/></g></svg>', cat:'veg', retail:19.5, margin:1.5},
+  {id:'v16', name:'زيتون تفاحي', nameEn:'Fresh Green Olives', unit:'كيلو', unitEn:'kg', emoji:'🌰', svg:'<svg viewBox="0 0 64 64"><g transform="translate(33,33)"><circle cx="-8" cy="4" r="8" fill="#7CAE4E"/><circle cx="-8" cy="4" r="8" fill="none" stroke="#5C8A32" stroke-width="0.8"/><circle cx="5" cy="8" r="7.5" fill="#8FBE5E"/><circle cx="5" cy="8" r="7.5" fill="none" stroke="#6B9B42" stroke-width="0.8"/><circle cx="-2" cy="-6" r="7" fill="#6FA346"/><circle cx="-2" cy="-6" r="7" fill="none" stroke="#4F7C2E" stroke-width="0.8"/><circle cx="10" cy="-4" r="6.5" fill="#7CAE4E"/><circle cx="10" cy="-4" r="6.5" fill="none" stroke="#5C8A32" stroke-width="0.8"/><ellipse cx="-5" cy="1" rx="1.6" ry="3" fill="#B8D98F" opacity="0.7"/><path d="M2 -13 C6 -17 12 -17 14 -13 C10 -13 6 -12 2 -9 Z" fill="#5C8A32"/><path d="M2 -13 C6 -17 12 -17 14 -13 C10 -13 6 -12 2 -9 Z" fill="none" stroke="#3F5F22" stroke-width="0.6"/></g></svg>', cat:'veg', retail:52.0, margin:4.0},
+  {id:'v17', name:'ليمون', nameEn:'Lemon', unit:'كيلو', unitEn:'kg', emoji:'🍋', cat:'veg', retail:41.0, margin:3.0},
+  {id:'v30', name:'ثوم', nameEn:'Garlic', unit:'كيلو', unitEn:'kg', emoji:'🧄', cat:'veg', retail:41.0, margin:3.0},
+  {id:'v29', name:'بطاطا', nameEn:'Sweet Potato', unit:'كيلو', unitEn:'kg', emoji:'🍠', cat:'veg', retail:14, margin:1},
+  {id:'v25', name:'ورق عنب', nameEn:'Grape Leaves', unit:'برطمان', unitEn:'jar', emoji:'🍇', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34)"><rect x="-13" y="-6" width="26" height="26" rx="3" fill="#DCE9E4" opacity="0.55"/><rect x="-13" y="-6" width="26" height="26" rx="3" fill="none" stroke="#9FB8B0" stroke-width="1"/><rect x="-14" y="-13" width="28" height="8" rx="2" fill="#2E5C4A"/><rect x="-14" y="-13" width="28" height="8" rx="2" fill="none" stroke="#1F4536" stroke-width="0.8"/><g fill="#4C7A22" stroke="#3A5F1A" stroke-width="0.6"><ellipse cx="-8" cy="4" rx="3.4" ry="9" transform="rotate(-8 -8 4)"/><ellipse cx="-2.5" cy="5" rx="3.4" ry="9.5" transform="rotate(4 -2.5 5)"/><ellipse cx="3" cy="4" rx="3.4" ry="9" transform="rotate(-4 3 4)"/><ellipse cx="8.5" cy="5" rx="3.2" ry="8.5" transform="rotate(9 8.5 5)"/></g></g></svg>', cat:'veg', retail:52.0, margin:4.0},
+  {id:'v19', name:'بقدونس', nameEn:'Parsley', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:3.5, margin:1},
+  {id:'v20', name:'كسبرة', nameEn:'Coriander', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:3.5, margin:1},
+  {id:'v21', name:'شبت', nameEn:'Dill', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:3.5, margin:1},
+  {id:'v22', name:'ملوخية', nameEn:'Molokhia', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:10, margin:1},
+  {id:'v23', name:'نعناع', nameEn:'Mint', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:3.5, margin:1},
+  {id:'v24', name:'خس كابوتشا', nameEn:'Iceberg Lettuce', unit:'رأس', unitEn:'head', emoji:'🥬', cat:'veg', retail:19.5, margin:1.5},
+  {id:'v32', name:'كرنب', nameEn:'Cabbage', unit:'حبة', unitEn:'piece', emoji:'🥬', cat:'veg', retail:35.5, margin:2.5},
+  {id:'v26', name:'جرجير', nameEn:'Arugula', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:3.5, margin:1},
+  {id:'v31', name:'كرفس', nameEn:'Celery', unit:'ربطة', unitEn:'bunch', emoji:'🌿', cat:'veg', retail:3.5, margin:1},
+  {id:'f1', name:'موز', nameEn:'Banana', unit:'كيلو', unitEn:'kg', emoji:'🍌', cat:'fruit', retail:46.5, margin:3.5, popular:true},
+  {id:'f2', name:'تفاح بلدي', nameEn:'Local Apple', unit:'كيلو', unitEn:'kg', emoji:'🍎', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.05)"><path d="M0 -12 C10 -14 17 -6 17 4 C17 15 10 22 0 22 C-10 22 -17 15 -17 4 C-17 -6 -10 -14 0 -12 Z" fill="#C9D66B"/><path d="M4 -10 C10 2 8 14 2 20 C8 16 14 8 13 -4 C11 -8 8 -10 4 -10 Z" fill="#D8433A" opacity="0.85"/><path d="M-10 -6 C-6 4 -8 14 -13 18 C-15 10 -15 -2 -10 -6 Z" fill="#D8433A" opacity="0.6"/><path d="M0 -12 L0 -19" stroke="#7A5A2E" stroke-width="1.6" stroke-linecap="round"/><path d="M0 -17 Q6 -20 9 -15 Q4 -14 0 -13 Z" fill="#5C8A32"/></g></svg>', cat:'fruit', retail:62.5, margin:4.5},
+  {id:'f21', name:'تفاح سكري', nameEn:'Sokkary Apple', unit:'كيلو', unitEn:'kg', emoji:'🍏', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.05)"><path d="M0 -12 C10 -14 17 -6 17 4 C17 15 10 22 0 22 C-10 22 -17 15 -17 4 C-17 -6 -10 -14 0 -12 Z" fill="#D62828"/><path d="M0 -12 C10 -14 17 -6 17 4 C17 15 10 22 0 22 C-10 22 -17 15 -17 4 C-17 -6 -10 -14 0 -12 Z" fill="none" stroke="#A81F1F" stroke-width="1"/><ellipse cx="-6" cy="-3" rx="3" ry="10" fill="#F06060" opacity="0.6"/><path d="M0 -12 L0 -19" stroke="#7A5A2E" stroke-width="1.6" stroke-linecap="round"/><path d="M0 -17 Q6 -20 9 -15 Q4 -14 0 -13 Z" fill="#5C8A32"/></g></svg>', cat:'fruit', retail:106.0, margin:8.0},
+  {id:'f22', name:'تفاح مستورد أحمر', nameEn:'Imported Red Apple', unit:'كيلو', unitEn:'kg', emoji:'🍎', cat:'fruit', retail:106.0, margin:8.0},
+  {id:'f23', name:'تفاح أبيض مستورد', nameEn:'Imported White Apple', unit:'كيلو', unitEn:'kg', emoji:'🍏', cat:'fruit', retail:106.0, margin:8.0},
+  {id:'f3', name:'كمثرى', nameEn:'Pear', unit:'كيلو', unitEn:'kg', emoji:'🍐', cat:'fruit', retail:62.5, margin:4.5},
+  {id:'f4', name:'عنب فرنسون (أحمر)', nameEn:'Red Flame Grapes', unit:'كيلو', unitEn:'kg', emoji:'🍇', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(0.95)"><circle cx="0" cy="-8" r="6.5" fill="#8B2942"/><circle cx="-8" cy="-2" r="6.5" fill="#9C2F4A"/><circle cx="8" cy="-2" r="6.5" fill="#9C2F4A"/><circle cx="-4" cy="8" r="6.5" fill="#A8324F"/><circle cx="5" cy="9" r="6.5" fill="#A8324F"/><circle cx="0" cy="18" r="6" fill="#B23A55"/><ellipse cx="-2" cy="-10" rx="1.6" ry="2.6" fill="#C56B85" opacity="0.7"/><path d="M0 -14 Q3 -20 9 -19 Q9 -14 4 -13" fill="#5C8A32"/><path d="M0 -14 L0 -18" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:68.0, margin:5.0},
+  {id:'f24', name:'عنب كريمسون', nameEn:'Crimson Grapes', unit:'كيلو', unitEn:'kg', emoji:'🍇', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(0.95)"><circle cx="0" cy="-8" r="6.5" fill="#7A1F38"/><circle cx="-8" cy="-2" r="6.5" fill="#8B2544"/><circle cx="8" cy="-2" r="6.5" fill="#8B2544"/><circle cx="-4" cy="8" r="6.5" fill="#962A4A"/><circle cx="5" cy="9" r="6.5" fill="#962A4A"/><circle cx="0" cy="18" r="6" fill="#A13050"/><ellipse cx="-2" cy="-10" rx="1.6" ry="2.6" fill="#C56B85" opacity="0.7"/><path d="M0 -14 Q3 -20 9 -19 Q9 -14 4 -13" fill="#5C8A32"/><path d="M0 -14 L0 -18" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:68.0, margin:5.0},
+  {id:'f8', name:'عنب بناتي (أخضر)', nameEn:'Green Seedless Grapes', unit:'كيلو', unitEn:'kg', emoji:'🍇', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(0.95)"><circle cx="0" cy="-8" r="6.5" fill="#A9CC63"/><circle cx="-8" cy="-2" r="6.5" fill="#B5D670"/><circle cx="8" cy="-2" r="6.5" fill="#B5D670"/><circle cx="-4" cy="8" r="6.5" fill="#BEDD7C"/><circle cx="5" cy="9" r="6.5" fill="#BEDD7C"/><circle cx="0" cy="18" r="6" fill="#C7E389"/><ellipse cx="-2" cy="-10" rx="1.6" ry="2.6" fill="#E4F0B8" opacity="0.8"/><path d="M0 -14 Q3 -20 9 -19 Q9 -14 4 -13" fill="#5C8A32"/><path d="M0 -14 L0 -18" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:62.5, margin:4.5},
+  {id:'f25', name:'عنب ملوكي', nameEn:'Malouki Grapes', unit:'كيلو', unitEn:'kg', emoji:'🍇', cat:'fruit', retail:30.0, margin:2.0},
+  {id:'f5', name:'بلح أسود (رطب)', nameEn:'Black Dates (Fresh)', unit:'كيلو', unitEn:'kg', emoji:'🌴', cat:'fruit', retail:41.0, margin:3.0},
+  {id:'f6', name:'بلح برحي (أصفر)', nameEn:'Barhi Dates (Yellow)', unit:'كيلو', unitEn:'kg', emoji:'🌴', cat:'fruit', retail:73.5, margin:5.5},
+  {id:'f26', name:'بلح زغلول (أحمر)', nameEn:'Zaghloul Dates (Red)', unit:'كيلو', unitEn:'kg', emoji:'🌴', cat:'fruit', retail:52.0, margin:4.0},
+  {id:'f7', name:'برقوق', nameEn:'Plum', unit:'كيلو', unitEn:'kg', emoji:'🍑', cat:'fruit', retail:62.5, margin:4.5},
+  {id:'f9', name:'مانجا سكري', nameEn:'Sokkary Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.5)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#E8A93B"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#C4831E" stroke-width="1"/><path d="M5 -12 C9 -8 11 -1 8 5" stroke="#D6402A" stroke-width="3.4" fill="none" opacity="0.5" stroke-linecap="round"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#F5CE7A" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:68.0, margin:5.0, popular:true},
+  {id:'f29', name:'مانجا سكري ممتاز', nameEn:'Premium Sokkary Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.5)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#E8A93B"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#C4831E" stroke-width="1"/><path d="M5 -12 C9 -8 11 -1 8 5" stroke="#D6402A" stroke-width="3.4" fill="none" opacity="0.5" stroke-linecap="round"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#F5CE7A" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:86.5, margin:6.5},
+  {id:'f30', name:'مانجا سكري أبيض', nameEn:'White Sokkary Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.5)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#F0E6C8"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#D4C89E" stroke-width="1"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#FBF6E8" opacity="0.8"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:86.5, margin:6.5},
+  {id:'f10', name:'مانجا نعومي', nameEn:'Naomi Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.95)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#E8A93B"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#C4831E" stroke-width="1"/><path d="M5 -12 C9 -8 11 -1 8 5" stroke="#D6402A" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#F5CE7A" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.1" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:68.0, margin:5.0},
+  {id:'f11', name:'مانجا عويسي', nameEn:'Ewaisi Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.1)"><path d="M-11 -6 C-8 -15 3 -18 11 -10 C18 -3 16 9 7 16 C0 22 -10 20 -14 10 C-16 4 -14 -1 -11 -6 Z" fill="#F5C518"/><path d="M-11 -6 C-8 -15 3 -18 11 -10 C18 -3 16 9 7 16 C0 22 -10 20 -14 10 C-16 4 -14 -1 -11 -6 Z" fill="none" stroke="#D4A00E" stroke-width="1"/><ellipse cx="-7" cy="-2" rx="2.6" ry="7" fill="#FBE28A" opacity="0.75"/><path d="M11 -10 Q15 -15 20 -14" fill="none" stroke="#5C8A32" stroke-width="1.1" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:127.5, margin:9.5},
+  {id:'f12', name:'مانجا أصناف', nameEn:'Mixed Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.5)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#E8A93B"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#C4831E" stroke-width="1"/><path d="M5 -12 C9 -8 11 -1 8 5" stroke="#D6402A" stroke-width="3.4" fill="none" opacity="0.5" stroke-linecap="round"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#F5CE7A" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:68.0, margin:5.0},
+  {id:'f19', name:'مانجا فراشة', nameEn:'Fasha Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.95)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#E8A93B"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#C4831E" stroke-width="1"/><path d="M5 -12 C9 -8 11 -1 8 5" stroke="#D6402A" stroke-width="3" fill="none" opacity="0.5" stroke-linecap="round"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#F5CE7A" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.1" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:73.5, margin:5.5},
+  {id:'f20', name:'مانجا زبدة', nameEn:'Zibda Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.95)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#7CAE4E"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#5C8A32" stroke-width="1"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#B5D68F" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#4C7A22" stroke-width="1.1" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:68.0, margin:5.0},
+  {id:'f27', name:'مانجا ياسمينا', nameEn:'Yasmine Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.5)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#E8A93B"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#C4831E" stroke-width="1"/><path d="M5 -12 C9 -8 11 -1 8 5" stroke="#D6402A" stroke-width="3.4" fill="none" opacity="0.5" stroke-linecap="round"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#F5CE7A" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:79.0, margin:6.0},
+  {id:'f28', name:'مانجا كريمسون', nameEn:'Crimson Mango', unit:'كيلو', unitEn:'kg', emoji:'🥭', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.5)"><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="#E8A93B"/><path d="M-11 -7 C-7 -15 3 -17 10 -10 C17 -3 15 8 7 15 C0 21 -10 19 -14 10 C-16 4 -14 -1 -11 -7 Z" fill="none" stroke="#C4831E" stroke-width="1"/><path d="M5 -12 C9 -8 11 -1 8 5" stroke="#D6402A" stroke-width="3.4" fill="none" opacity="0.5" stroke-linecap="round"/><ellipse cx="-7" cy="-3" rx="2.4" ry="6.5" fill="#F5CE7A" opacity="0.7"/><path d="M10 -10 Q14 -15 19 -14" fill="none" stroke="#5C8A32" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:81.0, margin:6.0},
+  {id:'f13', name:'جوافا', nameEn:'Guava', unit:'كيلو', unitEn:'kg', emoji:'🍈', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.05)"><path d="M0 -14 C11 -14 17 -4 16 6 C15 16 8 22 0 22 C-8 22 -15 16 -16 6 C-17 -4 -11 -14 0 -14 Z" fill="#DCE29A"/><path d="M0 -14 C11 -14 17 -4 16 6 C15 16 8 22 0 22 C-8 22 -15 16 -16 6 C-17 -4 -11 -14 0 -14 Z" fill="none" stroke="#B8C46E" stroke-width="1"/><ellipse cx="-5" cy="-2" rx="3" ry="10" fill="#EDF0C0" opacity="0.7"/><path d="M0 -14 Q-4 -22 -12 -22 Q-14 -16 -8 -13" fill="#5C8A32"/><path d="M0 -14 Q4 -20 10 -19" fill="none" stroke="#5C8A32" stroke-width="1.4" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:46.5, margin:3.5},
+  {id:'f14', name:'تين برشومي', nameEn:'Barshomi Fig', unit:'كيلو', unitEn:'kg', emoji:'🟢', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.05)"><path d="M0 -14 C9 -16 15 -8 14 3 C13 14 7 22 -1 22 C-9 22 -15 15 -14 4 C-13 -6 -7 -13 0 -14 Z" fill="#5B3A5C"/><path d="M0 -14 C9 -16 15 -8 14 3 C13 14 7 22 -1 22 C-9 22 -15 15 -14 4 C-13 -6 -7 -13 0 -14 Z" fill="none" stroke="#3F2740" stroke-width="1"/><ellipse cx="-5" cy="-3" rx="3" ry="9" fill="#7A5580" opacity="0.6"/><path d="M-2 -14 L-2 -19 M2 -15 L4 -19 M-6 -12 L-9 -16" stroke="#4C7A22" stroke-width="1.3" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:52.0, margin:4.0},
+  {id:'f15', name:'أناناس', nameEn:'Pineapple', unit:'كيلو', unitEn:'kg', emoji:'🍍', cat:'fruit', retail:30.0, margin:2.0},
+  {id:'f16', name:'شمام', nameEn:'Cantaloupe', unit:'كيلو', unitEn:'kg', emoji:'🍈', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,34) scale(1.05)"><circle cx="0" cy="4" r="18" fill="#D4A66E"/><circle cx="0" cy="4" r="18" fill="none" stroke="#B78A54" stroke-width="1"/><path d="M-15 -4 Q-8 0 -2 -6 Q4 -12 12 -8 M-16 4 Q-8 8 0 3 Q8 -2 16 2 M-14 12 Q-6 15 2 10 Q9 6 15 10" stroke="#B78A54" stroke-width="1" fill="none" opacity="0.7"/><path d="M0 -14 L0 -19" stroke="#5C8A32" stroke-width="1.6" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:30.0, margin:2.0},
+  {id:'f17', name:'رمان', nameEn:'Pomegranate', unit:'كيلو', unitEn:'kg', emoji:'🔴', svg:'<svg viewBox="0 0 64 64"><g transform="translate(32,35) scale(1.05)"><circle cx="0" cy="5" r="17" fill="#B8242E"/><circle cx="0" cy="5" r="17" fill="none" stroke="#8C1A22" stroke-width="1"/><ellipse cx="-6" cy="-2" rx="3" ry="9" fill="#D8535C" opacity="0.6"/><path d="M-6 -13 L-3 -19 L0 -13 L3 -19 L6 -13" fill="none" stroke="#8C1A22" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 -14 Q13 -17 15 -12" fill="none" stroke="#4C7A22" stroke-width="1.2" stroke-linecap="round"/></g></svg>', cat:'fruit', retail:46.5, margin:3.5},
+  {id:'f18', name:'برتقال صيفي', nameEn:'Summer Orange', unit:'كيلو', unitEn:'kg', emoji:'🍊', cat:'fruit', retail:30.0, margin:2.0},
+];
+const STATUS_STAGES = ['تم استلام الطلب', 'جاري التجهيز', 'الطلب في الطريق', 'تم التسليم'];
+const STATUS_CANCELLED = 'ملغي';
+
+function formatQty(q){
+  const r = Math.round(q*100)/100;
+  return Number.isInteger(r) ? String(r) : String(r).replace(/0+$/,'').replace(/\.$/,'');
+}
+
+function paymentLabel(method){
+  return method==='vodafone' ? 'فودافون كاش'
+       : method==='instapay' ? 'InstaPay'
+       : 'عند الاستلام';
+}
+
+function formatPhoneForWhatsapp(phone){
+  let digits = (phone || '').replace(/[^\d]/g, '');
+  if(digits.startsWith('0')) digits = '20' + digits.slice(1);
+  else if(!digits.startsWith('20')) digits = '20' + digits;
+  return digits;
+}
+function customerThankYouLink(o){
+  const waPhone = formatPhoneForWhatsapp(o.phone);
+  const msg = `شكراً لثقتك في طازة 🌿\nوصلك طلبك بإذن الله (كود: ${o.code})، ياريت لو عندك أي ملاحظة تقولّي عليها عشان نكون دايماً أحسن.\nفي انتظار طلبك الجاي 🍅🥕`;
+  return `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
+}
+
+/* ============================================================
+   أسعار المحل المعدّلة من لوحة التحكم مباشرة (نفس منطق الموقع)
+   ============================================================ */
+let productFlags = {};
+let unsubscribeProductFlags = null;
+
+function computeMarkup(storePrice){
+  const raw = storePrice * 0.08;
+  const halfRounded = Math.round(raw*2)/2;
+  return Math.max(1, halfRounded);
+}
+function computeRetailFromStore(storePrice){
+  return Math.round((storePrice + computeMarkup(storePrice))*100)/100;
+}
+function effectivePrice(p){
+  const flag = productFlags[p.id];
+  if(flag && flag.storePrice !== undefined && flag.storePrice !== null && flag.storePrice !== ''){
+    const sp = parseFloat(flag.storePrice);
+    if(!isNaN(sp) && sp >= 0) return computeRetailFromStore(sp);
+  }
+  return p.retail;
+}
+function effectiveStorePrice(p){
+  const flag = productFlags[p.id];
+  if(flag && flag.storePrice !== undefined && flag.storePrice !== null && flag.storePrice !== ''){
+    const sp = parseFloat(flag.storePrice);
+    if(!isNaN(sp) && sp >= 0) return sp;
+  }
+  return Math.round((p.retail - (p.margin||0))*100)/100;
+}
+const NEGOTIATION_DISCOUNT_PER_UNIT = 2;
+function trueStoreCost(p){
+  return Math.max(0, Math.round((effectiveStorePrice(p) - NEGOTIATION_DISCOUNT_PER_UNIT)*100)/100);
+}
+function isPopular(p){
+  const flag = productFlags[p.id];
+  if(flag && flag.popular !== undefined) return !!flag.popular;
+  return !!p.popular;
+}
+
+/* ===================== AUTH & NAVIGATION ===================== */
+const loginScreen = document.getElementById('loginScreen');
+const dashboardShell = document.getElementById('dashboardShell');
+const loginBtn = document.getElementById('loginBtn');
+const loginEmail = document.getElementById('loginEmail');
+const loginPassword = document.getElementById('loginPassword');
+const loginError = document.getElementById('loginError');
+const logoutBtn = document.getElementById('logoutBtn');
+
+let unsubscribeOrders = null;
+let latestOrdersSnapshot = [];
+let salesChartInstance = null;
+let statusChartInstance = null;
+let topProductsChartInstance = null;
+
+function showDashboard(){
+  loginScreen.style.display = 'none';
+  dashboardShell.classList.add('active');
+  startOrdersListener();
+  startProductFlagsListener();
+}
+function showLogin(){
+  loginScreen.style.display = 'flex';
+  dashboardShell.classList.remove('active');
+  if(unsubscribeOrders){ unsubscribeOrders(); unsubscribeOrders = null; }
+  if(unsubscribeProductFlags){ unsubscribeProductFlags(); unsubscribeProductFlags = null; }
+}
+
+loginBtn.addEventListener('click', async ()=>{
+  const email = loginEmail.value.trim();
+  const pass = loginPassword.value;
+  if(!email || !pass){
+    loginError.textContent = 'من فضلك اكتب الإيميل وكلمة المرور';
+    return;
+  }
+  loginError.textContent = '';
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'جاري الدخول...';
+  try{
+    await window.__fb.signInWithEmailAndPassword(window.__fb.auth, email, pass);
+  }catch(e){
+    loginError.textContent = 'الإيميل أو كلمة المرور غلط';
+  }
+  loginBtn.disabled = false;
+  loginBtn.textContent = 'تسجيل الدخول';
+});
+loginPassword.addEventListener('keydown', (e)=>{ if(e.key==='Enter') loginBtn.click(); });
+
+logoutBtn.addEventListener('click', async ()=>{
+  try{ await window.__fb.signOut(window.__fb.auth); }catch(e){}
+});
+
+/* view switching */
+document.querySelectorAll('.sidebar-nav button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.sidebar-nav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const target = btn.dataset.view;
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+target).classList.add('active');
+  });
+});
+
+/* ===================== ORDERS ===================== */
+const orderSearchEl = document.getElementById('orderSearch');
+const orderStatusFilterEl = document.getElementById('orderStatusFilter');
+orderStatusFilterEl.innerHTML = `<option value="">كل الحالات</option>` +
+  STATUS_STAGES.map(s=>`<option value="${s}">${s}</option>`).join('') +
+  `<option value="${STATUS_CANCELLED}">${STATUS_CANCELLED}</option>`;
+
+function startOrdersListener(){
+  if(!window.__fb) return;
+  const fb = window.__fb;
+  if(unsubscribeOrders){ unsubscribeOrders(); }
+  const ordersQuery = fb.query(fb.collection(fb.db,'orders'), fb.orderBy('createdAt','desc'));
+  unsubscribeOrders = fb.onSnapshot(ordersQuery, (snap)=>{
+    latestOrdersSnapshot = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    renderKPIs();
+    renderCharts();
+    renderOrdersList();
+  }, ()=>{});
+}
+
+function renderKPIs(){
+  const active = latestOrdersSnapshot.filter(o=>o.status!==STATUS_CANCELLED);
+  const totalRevenue = active.reduce((s,o)=>s+(o.total||0),0);
+  const totalDelivery = active.reduce((s,o)=>s+(o.deliveryFee||0),0);
+  const pendingCount = latestOrdersSnapshot.filter(o=>o.status!==STATUS_STAGES[STATUS_STAGES.length-1] && o.status!==STATUS_CANCELLED).length;
+
+  let totalMargin = 0, totalStoreCost = 0;
+  active.forEach(o=>{
+    (o.items||[]).forEach(it=>{
+      const product = PRODUCTS.find(p=>p.name===it.name);
+      if(!product) return;
+      const unitMargin = effectivePrice(product) - trueStoreCost(product);
+      totalMargin += unitMargin * it.qty;
+      totalStoreCost += trueStoreCost(product) * it.qty;
+    });
+  });
+
+  document.getElementById('kpiTotal').textContent = latestOrdersSnapshot.length;
+  document.getElementById('kpiPending').textContent = pendingCount;
+  document.getElementById('kpiRevenue').textContent = Math.round(totalRevenue*100)/100;
+  document.getElementById('kpiDelivery').textContent = Math.round(totalDelivery*100)/100;
+  document.getElementById('kpiMargin').textContent = Math.round(totalMargin*100)/100;
+  document.getElementById('kpiStoreCost').textContent = Math.round(totalStoreCost*100)/100;
+}
+
+function tsToDate(ts){
+  if(!ts) return null;
+  if(ts.toDate) return ts.toDate();
+  if(ts.seconds) return new Date(ts.seconds*1000);
+  return null;
+}
+
+function renderCharts(){
+  if(typeof Chart === 'undefined') return;
+  const active = latestOrdersSnapshot.filter(o=>o.status!==STATUS_CANCELLED);
+
+  /* --- Sales over last 14 days --- */
+  const days = [];
+  const dayLabels = [];
+  const now = new Date();
+  for(let i=13;i>=0;i--){
+    const d = new Date(now);
+    d.setDate(now.getDate()-i);
+    d.setHours(0,0,0,0);
+    days.push(d);
+    dayLabels.push(`${d.getDate()}/${d.getMonth()+1}`);
+  }
+  const salesByDay = days.map(day=>{
+    const next = new Date(day); next.setDate(day.getDate()+1);
+    return active.filter(o=>{
+      const d = tsToDate(o.createdAt);
+      return d && d >= day && d < next;
+    }).reduce((s,o)=>s+(o.total||0),0);
+  });
+
+  const salesCtx = document.getElementById('salesChart');
+  if(salesChartInstance) salesChartInstance.destroy();
+  salesChartInstance = new Chart(salesCtx, {
+    type: 'line',
+    data: {
+      labels: dayLabels,
+      datasets: [{
+        label: 'المبيعات (ج.م)',
+        data: salesByDay,
+        borderColor: '#115E28',
+        backgroundColor: 'rgba(17,94,40,.12)',
+        fill: true,
+        tension: .3,
+        pointRadius: 3,
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ y:{ beginAtZero:true } }
+    }
+  });
+
+  /* --- Order status breakdown --- */
+  const statusCounts = {};
+  STATUS_STAGES.forEach(s=> statusCounts[s]=0);
+  statusCounts[STATUS_CANCELLED]=0;
+  latestOrdersSnapshot.forEach(o=>{
+    const key = STATUS_STAGES.includes(o.status) ? o.status : (o.status===STATUS_CANCELLED ? STATUS_CANCELLED : STATUS_STAGES[0]);
+    statusCounts[key] = (statusCounts[key]||0) + 1;
+  });
+  const statusCtx = document.getElementById('statusChart');
+  if(statusChartInstance) statusChartInstance.destroy();
+  statusChartInstance = new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(statusCounts),
+      datasets: [{
+        data: Object.values(statusCounts),
+        backgroundColor: ['#64A81E','#E67E22','#1B7A38','#115E28','#E0503A'],
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'bottom', labels:{boxWidth:12, font:{size:11}}} }
+    }
+  });
+
+  /* --- Top selling products --- */
+  const qtyByProduct = {};
+  active.forEach(o=>{
+    (o.items||[]).forEach(it=>{
+      qtyByProduct[it.name] = (qtyByProduct[it.name]||0) + it.qty;
+    });
+  });
+  const topEntries = Object.entries(qtyByProduct).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const topCtx = document.getElementById('topProductsChart');
+  if(topProductsChartInstance) topProductsChartInstance.destroy();
+  topProductsChartInstance = new Chart(topCtx, {
+    type: 'bar',
+    data: {
+      labels: topEntries.map(e=>e[0]),
+      datasets: [{
+        label: 'الكمية المباعة',
+        data: topEntries.map(e=>Math.round(e[1]*100)/100),
+        backgroundColor: '#E67E22',
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      indexAxis: 'y',
+      plugins:{ legend:{display:false} },
+      scales:{ x:{ beginAtZero:true } }
+    }
+  });
+}
+
+function renderOrdersList(){
+  const listEl = document.getElementById('orderList');
+  const q = orderSearchEl.value.trim().toLowerCase();
+  const statusFilter = orderStatusFilterEl.value;
+  const filtered = latestOrdersSnapshot.filter(o=>{
+    const matchesQ = !q || (o.code||'').toLowerCase().includes(q) || (o.phone||'').includes(q);
+    const matchesStatus = !statusFilter || o.status===statusFilter;
+    return matchesQ && matchesStatus;
+  });
+
+  if(filtered.length===0){
+    listEl.innerHTML = `<div class="empty-state">مفيش طلبات مطابقة</div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(o=>{
+    const itemsInvoiceHTML = (o.items||[]).map(it=>{
+      const product = PRODUCTS.find(p=>p.name===it.name);
+      const storeUnitPrice = product ? trueStoreCost(product) : null;
+      const storeCostText = storeUnitPrice!==null ? ` (تكلفتك الفعلية: ${storeUnitPrice} ج.م)` : '';
+      return `<div class="invoice-row">
+        <span>${it.name} — ${formatQty(it.qty)} ${it.unit} × ${it.price} ج.م${storeCostText}</span>
+        <span style="font-weight:700;">${it.lineTotal} ج.م</span>
+      </div>`;
+    }).join('');
+
+    const isCancelled = o.status === STATUS_CANCELLED;
+    const isDelivered = o.status === STATUS_STAGES[STATUS_STAGES.length-1];
+
+    return `
+    <div class="order-card" data-id="${o.id}">
+      <div class="order-card-head">
+        <span class="order-code">${o.code}</span>
+        <span class="order-total">${o.total} ج.م</span>
+      </div>
+      ${o.orderType==='business' ? `<div class="order-badge badge-business">🍽️ طلب مطعم/فندق${o.businessName ? ' — '+o.businessName : ''}</div>` : ''}
+      <div class="order-meta">
+        👤 ${o.name} — 📞 ${o.phone}<br>
+        🚚 ${o.deliveryMethod==='delivery' ? ('توصيل: '+o.address+(o.deliveryFee!==undefined ? ' — رسوم توصيل: '+(o.deliveryFee===0?'مجاني':o.deliveryFee+' ج.م') : '')) : 'استلام من السوق'}<br>
+        💳 ${paymentLabel(o.paymentMethod)}
+      </div>
+      <div class="invoice-box">${itemsInvoiceHTML}</div>
+      <a href="${customerThankYouLink(o)}" target="_blank" rel="noopener" class="btn-wa" style="display:block; text-decoration:none;">📱 ابعت رسالة شكر للعميل على واتساب</a>
+      ${isCancelled ? `<div class="order-badge badge-cancelled" style="display:block; text-align:center; margin-top:8px;">❌ الطلب ده ملغي</div>`
+        : isDelivered ? `<div class="order-badge badge-delivered" style="display:block; text-align:center; margin-top:8px;">✅ تم الاستلام</div>`
+        : `<div class="order-actions">
+             <select class="status-select">
+               ${STATUS_STAGES.map(s=>`<option value="${s}" ${s===o.status?'selected':''}>${s}</option>`).join('')}
+             </select>
+             <button class="btn-cancel">إلغاء الطلب</button>
+           </div>`
+      }
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('.order-card').forEach(card=>{
+    const id = card.dataset.id;
+    const statusSelect = card.querySelector('.status-select');
+    if(statusSelect){
+      statusSelect.addEventListener('change', async (e)=>{
+        try{
+          await window.__fb.updateDoc(window.__fb.doc(window.__fb.db,'orders',id), { status: e.target.value });
+        }catch(err){ alert('حصلت مشكلة في تحديث الحالة، حاول تاني.'); }
+      });
+    }
+    const cancelBtn = card.querySelector('.btn-cancel');
+    if(cancelBtn){
+      cancelBtn.addEventListener('click', async ()=>{
+        if(!confirm('هل انت متأكد من إلغاء الطلب؟')) return;
+        try{
+          await window.__fb.updateDoc(window.__fb.doc(window.__fb.db,'orders',id), { status: STATUS_CANCELLED });
+        }catch(err){ alert('حصلت مشكلة في إلغاء الطلب، حاول تاني.'); }
+      });
+    }
+  });
+}
+
+orderSearchEl.addEventListener('input', renderOrdersList);
+orderStatusFilterEl.addEventListener('change', renderOrdersList);
+
+/* ===================== PRODUCTS ===================== */
+const productSearchEl = document.getElementById('productSearch');
+
+function startProductFlagsListener(){
+  if(!window.__fb) return;
+  const fb = window.__fb;
+  if(unsubscribeProductFlags){ unsubscribeProductFlags(); }
+  unsubscribeProductFlags = fb.onSnapshot(fb.collection(fb.db, 'product_flags'), (snap)=>{
+    const next = {};
+    snap.forEach(d=>{ next[d.id] = d.data(); });
+    productFlags = next;
+    renderProductsList();
+    renderKPIs();
+  }, ()=>{});
+}
+
+function renderProductsList(){
+  const listEl = document.getElementById('productList');
+  const q = productSearchEl.value.trim().toLowerCase();
+  const filtered = q ? PRODUCTS.filter(p=> p.name.toLowerCase().includes(q) || (p.nameEn||'').toLowerCase().includes(q)) : PRODUCTS;
+
+  if(filtered.length===0){
+    listEl.innerHTML = `<div class="empty-state">مفيش منتجات مطابقة</div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(p=>{
+    const flag = productFlags[p.id] || {};
+    const currentStorePrice = effectiveStorePrice(p);
+    const currentRetail = effectivePrice(p);
+    return `
+    <div class="product-card" data-pid="${p.id}">
+      <div class="product-card-head">${p.name}</div>
+      <div class="price-edit-box">
+        <label>💰 سعر المحل (${p.unit})</label>
+        <div class="price-edit-row">
+          <input type="number" step="0.5" min="0" class="flagStorePrice" value="${currentStorePrice}">
+          <span class="price-computed">السعر النهائي للعميل: <strong class="storePriceComputed">${currentRetail}</strong> ج.م</span>
+        </div>
+      </div>
+      <label class="flag-row"><input type="checkbox" class="flagPopular" ${isPopular(p) ? 'checked' : ''}> 🔥 الأكثر طلباً</label>
+      <label class="flag-row"><input type="checkbox" class="flagIsNew" ${flag.isNew ? 'checked' : ''}> 🆕 صنف جديد</label>
+      <label class="flag-row"><input type="checkbox" class="flagLowStock" ${flag.lowStock ? 'checked' : ''}> ⚠️ الكمية قربت تخلص</label>
+      <div class="flagQtyRow" style="${flag.lowStock ? '' : 'display:none;'}">
+        <input type="text" class="flag-qty-input flagQty" placeholder="فاضل قد ايه؟ (مثلاً: 5 كيلو)" value="${flag.remainingQty || ''}">
+      </div>
+      <label class="flag-row danger"><input type="checkbox" class="flagOutOfStock" ${flag.outOfStock ? 'checked' : ''}> 🚫 نفذت الكمية بالكامل</label>
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('.product-card').forEach(card=>{
+    const pid = card.dataset.pid;
+    const storePriceInput = card.querySelector('.flagStorePrice');
+    const computedSpan = card.querySelector('.storePriceComputed');
+    const popularCb = card.querySelector('.flagPopular');
+    const isNewCb = card.querySelector('.flagIsNew');
+    const lowStockCb = card.querySelector('.flagLowStock');
+    const qtyRow = card.querySelector('.flagQtyRow');
+    const qtyInput = card.querySelector('.flagQty');
+    const outOfStockCb = card.querySelector('.flagOutOfStock');
+
+    async function save(){
+      const data = {
+        storePrice: parseFloat(storePriceInput.value) || 0,
+        popular: popularCb.checked,
+        isNew: isNewCb.checked,
+        lowStock: lowStockCb.checked,
+        remainingQty: qtyInput.value.trim(),
+        outOfStock: outOfStockCb.checked,
+      };
+      try{
+        await window.__fb.setDoc(window.__fb.doc(window.__fb.db, 'product_flags', pid), data, { merge:true });
+        if(computedSpan){
+          const oldText = computedSpan.textContent;
+          computedSpan.style.color = 'var(--green-mid)';
+          computedSpan.textContent = oldText + ' ✅';
+          setTimeout(()=>{ computedSpan.textContent = oldText; computedSpan.style.color = ''; }, 1500);
+        }
+      }catch(e){
+        alert('حصلت مشكلة في الحفظ، حاول تاني.');
+      }
+    }
+
+    storePriceInput.addEventListener('input', ()=>{
+      const sp = parseFloat(storePriceInput.value);
+      if(!isNaN(sp) && sp >= 0) computedSpan.textContent = computeRetailFromStore(sp);
+    });
+    storePriceInput.addEventListener('change', save);
+    storePriceInput.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){ e.preventDefault(); save(); storePriceInput.blur(); }
+    });
+    popularCb.addEventListener('change', save);
+    isNewCb.addEventListener('change', save);
+    lowStockCb.addEventListener('change', ()=>{
+      qtyRow.style.display = lowStockCb.checked ? 'block' : 'none';
+      save();
+    });
+    qtyInput.addEventListener('change', save);
+    outOfStockCb.addEventListener('change', save);
+  });
+}
+
+productSearchEl.addEventListener('input', renderProductsList);
+
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, doc, setDoc, updateDoc, deleteDoc,
+  onSnapshot, query, where, orderBy, serverTimestamp, getDocs, increment
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import {
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD7D9_qJPu4T-b1FOvoxLrQA0Tfg2t_8dk",
+  authDomain: "souq-c80bf.firebaseapp.com",
+  projectId: "souq-c80bf",
+  storageBucket: "souq-c80bf.firebasestorage.app",
+  messagingSenderId: "783350374083",
+  appId: "1:783350374083:web:e1cc7f70115b95e971cc76",
+  measurementId: "G-FDT3PE48Y2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+window.__fb = {
+  db, collection, addDoc, doc, setDoc, updateDoc, deleteDoc,
+  onSnapshot, query, where, orderBy, serverTimestamp, getDocs, increment,
+  auth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+};
+
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    if(typeof showDashboard === 'function') showDashboard();
+  } else {
+    if(typeof showLogin === 'function') showLogin();
+  }
+});
+
+window.dispatchEvent(new Event('firebase-ready'));
+
+</script>
+</body>
+</html>

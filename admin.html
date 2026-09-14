@@ -671,6 +671,7 @@ function renderOrdersList(){
       </div>
       <div class="invoice-box">${itemsInvoiceHTML}</div>
       <a href="${customerThankYouLink(o)}" target="_blank" rel="noopener" class="btn-wa" style="display:block; text-decoration:none;">📱 ابعت رسالة شكر للعميل على واتساب</a>
+      <button class="btn-delete-order" style="display:block; width:100%; margin-top:8px; background:transparent; border:1.5px dashed var(--danger); color:var(--danger); border-radius:8px; padding:8px; font-weight:700; font-size:12px;">🗑️ امسح الطلب نهائياً</button>
       ${isCancelled ? `<div class="order-badge badge-cancelled" style="display:block; text-align:center; margin-top:8px;">❌ الطلب ده ملغي</div>`
         : isDelivered ? `<div class="order-badge badge-delivered" style="display:block; text-align:center; margin-top:8px;">✅ تم الاستلام</div>`
         : `<div class="order-actions">
@@ -691,6 +692,23 @@ function renderOrdersList(){
         try{
           await window.__fb.updateDoc(window.__fb.doc(window.__fb.db,'orders',id), { status: e.target.value });
         }catch(err){ alert('حصلت مشكلة في تحديث الحالة، حاول تاني.'); }
+      });
+    }
+    const deleteBtn = card.querySelector('.btn-delete-order');
+    if(deleteBtn){
+      deleteBtn.addEventListener('click', async ()=>{
+        const pass = prompt('اكتب كلمة السر عشان تمسح الطلب ده نهائياً:');
+        if(pass === null) return;
+        if(pass !== 'taza@2026'){
+          alert('كلمة السر غلط. اتلغت عملية المسح.');
+          return;
+        }
+        if(!confirm('هتتمسح بيانات الطلب ده نهائياً ومفيش رجوع. متأكد؟')) return;
+        try{
+          await window.__fb.deleteDoc(window.__fb.doc(window.__fb.db,'orders',id));
+        }catch(err){
+          alert('حصلت مشكلة في المسح، حاول تاني.');
+        }
       });
     }
     const cancelBtn = card.querySelector('.btn-cancel');
